@@ -1,4 +1,4 @@
-# Kotoba Recipes
+# LLM Recipes
 
 # Table of Contents
 
