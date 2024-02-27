@@ -2,7 +2,7 @@
 
 set -e
 
-start=15000
+start=20000
 end=20000
 increment=5000
 
@@ -14,5 +14,5 @@ for ((i = start; i <= end; i += increment)); do
 
   python scripts/kotoba/upload/upload.py \
     --ckpt-path $upload_dir \
-    --repo-name tokyotech-llm/Mistral-7B-VE-algebraic-stack-the-vault-lr_2e-5-minlr_2e-6-iter$(printf "%07d" $i)
+    --repo-name tokyotech-llm/Mistral-7B-VE-the-vault-lr_2e-5-minlr_6.6e-7-iter$(printf "%07d" $i)
 done
