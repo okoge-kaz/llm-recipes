@@ -1,0 +1,17 @@
+#!/bin/bash
+
+INPUT_DIR=/bb/llm/gaf51275/llama/finetuning/datasets/formatted
+OUTPUT_DIR=/bb/llm/gaf51275/llama/finetuning/datasets/training
+
+mkdir -p $OUTPUT_DIR
+
+cat $INPUT_DIR/databricks-dolly-15k-en.jsonl $INPUT_DIR/databricks-dolly-15k-ja.jsonl $INPUT_DIR/oasst1-21k-en.jsonl $INPUT_DIR/oasst1-21k-ja.jsonl > $OUTPUT_DIR/merged.jsonl
+
+echo "Merged dataset is saved at $OUTPUT_DIR/merged.jsonl"
+
+# swich virtual env
+source .env/bin/activate
+
+python tools/dataset/shuffle_and_split.py \
+  --input $OUTPUT_DIR/merged.jsonl \
+  --output $OUTPUT_DIR
