@@ -22,7 +22,7 @@ export MASTER_PORT=$((10000 + ($JOB_ID % 50000)))
 
 echo "MASTER_ADDR=${MASTER_ADDR}"
 
-start=15000
+start=20000
 end=20000
 increment=5000
 
@@ -30,8 +30,8 @@ for ((i = start; i <= end; i += increment)); do
   ITERATION=$i
   FORMATTED_ITERATION=$(printf "iter_%07d" $ITERATION)
 
-  CHECK_POINT_PATH=/bb/llm/gaf51275/llama/checkpoints/mistral-7b-VE/algebraic-stack-the-vault-lr_2e-5-minlr_2e-6/${FORMATTED_ITERATION}/model.pt
-  OUTPUT_PATH=/bb/llm/gaf51275/llama/converted-hf-checkpoint/mistral-7B-VE/algebraic-stack-the-vault-lr_2e-5-minlr_2e-6/${FORMATTED_ITERATION}
+  CHECK_POINT_PATH=/bb/llm/gaf51275/llama/checkpoints/mistral-7b-VE/the-vault-lr_2e-5-minlr_6.6e-7/${FORMATTED_ITERATION}/model.pt
+  OUTPUT_PATH=/bb/llm/gaf51275/llama/converted-hf-checkpoint/mistral-7B-VE/the-vault-lr_2e-5-minlr_6.6e-7/${FORMATTED_ITERATION}
 
   echo "convert ${CHECK_POINT_PATH} to ${OUTPUT_PATH}"
 

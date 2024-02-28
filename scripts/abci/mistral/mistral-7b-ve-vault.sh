@@ -1,6 +1,6 @@
 #!/bin/bash
-#$ -l rt_AF=16
-#$ -l h_rt=10:0:00:00
+#$ -l rt_AF=4
+#$ -l h_rt=1:00:00:00
 #$ -j y
 #$ -o outputs/mistral-7b-ve/the-vault/
 #$ -cwd
