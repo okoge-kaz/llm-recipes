@@ -1,52 +1,40 @@
 #!/bin/bash
-#$ -l rt_AF=1
-#$ -l h_rt=3:00:00
-#$ -j y
-#$ -o outputs/index/
-#$ -cwd
 
 source .env/bin/activate
 
-INPUT_DIR=/groups/gaf51275/llama/datasets/instruct/GPT-4-LLM/data
+INPUT_DIR=/bb/llm/gaf51275/llama/finetuning/datasets/training
 
-# convert json to jsonl
-python tools/pre-process/convert_json_jsonl.py \
-  --data-file-path $INPUT_DIR/alpaca_gpt4_data.json
-
-INPUT_DIR=/groups/gaf51275/llama/datasets/instruct/GPTeacher/Instruct
-
-python tools/pre-process/convert_json_jsonl.py \
-  --data-file-path $INPUT_DIR/gpt4-instruct-dedupe-only-dataset.json
-
-python tools/pre-process/convert_json_jsonl.py \
-  --data-file-path $INPUT_DIR/gpt4-instruct-similarity-0.6-dataset.json
-
-python tools/pre-process/convert_json_jsonl.py \
-  --data-file-path $INPUT_DIR/gpt4-instruct-similarity-0.7-dataset.json
-
-python tools/pre-process/convert_json_jsonl.py \
-  --data-file-path $INPUT_DIR/gpt4-instruct-similarity-0.8-dataset.json
-
-python tools/pre-process/convert_json_jsonl.py \
-  --data-file-path $INPUT_DIR/gpt4-instruct-similarity-0.9-dataset.json
-
-# indexing
+# baseline
 python tools/pre-process/index_dataset.py \
-  --data-file-path $INPUT_DIR/gpt4-instruct-dedupe-only-dataset.jsonl
+  --data-file-path $INPUT_DIR/baseline/train.jsonl
 
 python tools/pre-process/index_dataset.py \
-  --data-file-path $INPUT_DIR/gpt4-instruct-similarity-0.6-dataset.jsonl
+  --data-file-path $INPUT_DIR/baseline/val.jsonl
+
+# baseline-imitation_2
+python tools/pre-process/index_dataset.py \
+  --data-file-path $INPUT_DIR/baseline-imitation_2/train.jsonl
 
 python tools/pre-process/index_dataset.py \
-  --data-file-path $INPUT_DIR/gpt4-instruct-similarity-0.7-dataset.jsonl
+  --data-file-path $INPUT_DIR/baseline-imitation_2/val.jsonl
+
+# ichikara
+python tools/pre-process/index_dataset.py \
+  --data-file-path $INPUT_DIR/ichikara/train.jsonl
 
 python tools/pre-process/index_dataset.py \
-  --data-file-path $INPUT_DIR/gpt4-instruct-similarity-0.8-dataset.jsonl
+  --data-file-path $INPUT_DIR/ichikara/val.jsonl
+
+# imitation_1_and_2
+python tools/pre-process/index_dataset.py \
+  --data-file-path $INPUT_DIR/imitation_1_and_2/train.jsonl
 
 python tools/pre-process/index_dataset.py \
-  --data-file-path $INPUT_DIR/gpt4-instruct-similarity-0.9-dataset.jsonl
+  --data-file-path $INPUT_DIR/imitation_1_and_2/val.jsonl
 
-INPUT_DIR=/groups/gaf51275/llama/datasets/instruct/GPT-4-LLM/data
+# imitation_2_oasst2_top1
+python tools/pre-process/index_dataset.py \
+  --data-file-path $INPUT_DIR/imitation_2_oasst2_top1/train.jsonl
 
 python tools/pre-process/index_dataset.py \
-  --data-file-path $INPUT_DIR/alpaca_gpt4_data.jsonl
+  --data-file-path $INPUT_DIR/imitation_2_oasst2_top1/val.jsonl

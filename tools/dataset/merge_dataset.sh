@@ -1,11 +1,11 @@
 #!/bin/bash
 
 INPUT_DIR=/bb/llm/gaf51275/llama/finetuning/datasets/formatted
-OUTPUT_DIR=/bb/llm/gaf51275/llama/finetuning/datasets/training
+OUTPUT_DIR=/bb/llm/gaf51275/llama/finetuning/datasets/training/imitation_2_oasst2_top1
 
 mkdir -p $OUTPUT_DIR
 
-cat $INPUT_DIR/databricks-dolly-15k-en.jsonl $INPUT_DIR/databricks-dolly-15k-ja.jsonl $INPUT_DIR/oasst1-21k-en.jsonl $INPUT_DIR/oasst1-21k-ja.jsonl > $OUTPUT_DIR/merged.jsonl
+cat $INPUT_DIR/oasst1-21k-ja-mixtral-imitation_2.jsonl $INPUT_DIR/oasst2-top1-en.jsonl > $OUTPUT_DIR/merged.jsonl
 
 echo "Merged dataset is saved at $OUTPUT_DIR/merged.jsonl"
 
