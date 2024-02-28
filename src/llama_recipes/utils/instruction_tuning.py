@@ -68,9 +68,6 @@ class InstructDataset(Dataset):
             tokenize=False
         )
 
-        if len(prompt) >= self.max_words * (2 / 3):
-            print(f"\n\nWARNING: len(prompt)={len(prompt)}, prompt={prompt}\n\n")
-
         example: str = prompt + conversations["output"]  # type: ignore
         encoded_prompt: torch.Tensor = torch.tensor(
             self.tokenizer.encode(prompt, add_special_tokens=False),
@@ -81,6 +78,9 @@ class InstructDataset(Dataset):
         )
         encoded_example.append(self.tokenizer.eos_token_id)  # type: ignore
         encoded_tensor_example: torch.Tensor = torch.tensor(encoded_example, dtype=torch.int64)
+
+        if len(encoded_example) > self.max_words:
+            print(f"\n\nWARNING: example={example}\n\n")
 
         padding: int = self.max_words - encoded_tensor_example.shape[0]
         if padding > 0:  # pad_token_id = 0 (substitute unk_token)
