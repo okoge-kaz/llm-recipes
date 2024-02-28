@@ -7,13 +7,41 @@ import copy
 IGNORE_INDEX = -100
 
 tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(  # type: ignore
-    "/groups/gaf51275/hf-checkpoints/Llama-2-13b-hf/"
+    "/bb/llm/gaf51275/llama/huggingface-checkpoint/Swallow-7b-hf/"
 )
 torch.set_printoptions(threshold=4096)
 
-prompt: str = "こんにちは"
+conversations: dict = {
+    "input": [
+        {
+            "role": "user",
+            "text": "こんにちは"
+        },
+        {
+            "role": "assistant",
+            "text": "hello"
+        },
+        {
+            "role": "user",
+            "text": "good"
+        }
+    ],
+    "output": "いいね"
+}
 
-example: str = prompt + "世界"  # type: ignore
+SYSTEM_PROMPT = [
+    {"role": "system", "text": "あなたは誠実で優秀な日本人のアシスタントです。"}
+]
+# chat template
+prompt: str = tokenizer.apply_chat_template(
+    conversation=SYSTEM_PROMPT + conversations["input"],  # type: ignore
+    tokenize=False
+)
+
+if len(prompt) >= 4096 * (2 / 3):
+    print(f"\n\nWARNING: len(prompt)={len(prompt)}, prompt={prompt}\n\n")
+
+example: str = prompt + conversations["output"]  # type: ignore
 
 encoded_prompt: torch.Tensor = torch.tensor(
     tokenizer.encode(prompt, add_special_tokens=False),
