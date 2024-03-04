@@ -1,6 +1,6 @@
 #!/bin/bash
 #$ -l rt_AF=2
-#$ -l h_rt=0:10:00:00
+#$ -l h_rt=0:20:00:00
 #$ -j y
 #$ -o outputs/instruction/swallow-13b/
 #$ -cwd
@@ -47,8 +47,8 @@ done <"$SGE_JOB_HOSTLIST" >"$HOSTFILE_NAME"
 SEQ_LENGTH=4096
 DATA_PARALLEL_SIZE=$NUM_GPUS
 
-MICRO_BATCH_SIZE=4
-GLOBAL_BATCH_SIZE=64
+MICRO_BATCH_SIZE=2
+GLOBAL_BATCH_SIZE=256
 
 # optimizer config
 LR=2e-5

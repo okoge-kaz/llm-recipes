@@ -1,6 +1,6 @@
 #!/bin/bash
 #$ -l rt_AF=16
-#$ -l h_rt=0:14:00:00
+#$ -l h_rt=0:10:00:00
 #$ -j y
 #$ -o outputs/instruction/swallow-70b/
 #$ -cwd
@@ -48,7 +48,7 @@ SEQ_LENGTH=4096
 DATA_PARALLEL_SIZE=$NUM_GPUS
 
 MICRO_BATCH_SIZE=1
-GLOBAL_BATCH_SIZE=64
+GLOBAL_BATCH_SIZE=256
 
 # optimizer config
 LR=1e-5
@@ -59,7 +59,7 @@ GRAD_CLIP=1
 # checkpoint & tokenizer
 TOKENIZER_MODEL=/bb/llm/gaf51275/llama/huggingface-checkpoint/Swallow-70b-hf/tokenizer.model
 CHECKPOINT_DIR=/bb/llm/gaf51275/llama/huggingface-checkpoint/Swallow-70b-hf
-CHECKPOINT_SAVE_DIR="/bb/llm/gaf51275/llama/checkpoints/Swallow-70b-VE-chat/baseline-imitation-2-lr_${LR}-minlr_${MIN_LR}-GB_${GLOBAL_BATCH_SIZE}"
+CHECKPOINT_SAVE_DIR="/bb/llm/gaf51275/llama/checkpoints/Swallow-70b-VE-chat/baseline-imitation-2-lr_${LR}-minlr_${MIN_LR}-GB_${GLOBAL_BATCH_SIZE}-GB_${GLOBAL_BATCH_SIZE}"
 
 mkdir -p ${CHECKPOINT_SAVE_DIR}
 
