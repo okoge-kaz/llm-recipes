@@ -63,6 +63,7 @@ def main() -> None:
     args.rank = rank
     args.world_size = world_size
     args.gradient_accumulation_steps = args.global_batch_size // (args.micro_batch_size * world_size)
+    assert args.gradient_accumulation_steps >= 1
 
     torch_distributed.init_process_group(backend="nccl", world_size=world_size, rank=rank)
 

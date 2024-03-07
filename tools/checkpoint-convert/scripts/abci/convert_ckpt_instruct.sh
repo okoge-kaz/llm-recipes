@@ -1,6 +1,6 @@
 #!/bin/bash
 #$ -l rt_F=1
-#$ -l h_rt=10:00:00
+#$ -l h_rt=1:00:00
 #$ -j y
 #$ -o outputs/convert/ckpt/
 #$ -cwd
@@ -22,22 +22,22 @@ export MASTER_PORT=$((10000 + ($JOB_ID % 50000)))
 
 echo "MASTER_ADDR=${MASTER_ADDR}"
 
-start=25000
-end=25000
+start=578
+end=578
 increment=5000
 
 for ((i = start; i <= end; i += increment)); do
   ITERATION=$i
   FORMATTED_ITERATION=$(printf "iter_%07d" $ITERATION)
 
-  CHECK_POINT_PATH=/bb/llm/gaf51275/llama/checkpoints/mistral-7b-VE/the-vault-lr_2e-5-minlr_6.6e-7/${FORMATTED_ITERATION}/model.pt
-  OUTPUT_PATH=/bb/llm/gaf51275/llama/converted-hf-checkpoint/mistral-7B-VE/the-vault-lr_2e-5-minlr_6.6e-7/${FORMATTED_ITERATION}
+  CHECK_POINT_PATH=/bb/llm/gaf51275/llama/checkpoints/Swallow-70b-VE-chat/oasst2-top1-imitation-2-3-lr_1e-5-minlr_1e-6-GB_256/${FORMATTED_ITERATION}/model.pt
+  OUTPUT_PATH=/bb/llm/gaf51275/llama/converted-hf-checkpoint/Swallow-70b-VE-chat/oasst2-top1-imitation-2-3-lr_1e-5-minlr_1e-6-GB_256/${FORMATTED_ITERATION}
 
   echo "convert ${CHECK_POINT_PATH} to ${OUTPUT_PATH}"
 
   mkdir -p $OUTPUT_PATH
 
-  BASE_MODEL_CHECKPOINT=/bb/llm/gaf51275/llama/mistral/swallow-mistral-7B-v0.1-merged-tokenizer-nfkc-16k-hf
+  BASE_MODEL_CHECKPOINT=/bb/llm/gaf51275/llama/huggingface-checkpoint/Swallow-70b-hf
 
   python tools/checkpoint-convert/convert_ckpt.py \
     --model $BASE_MODEL_CHECKPOINT \

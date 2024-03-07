@@ -27,9 +27,9 @@ def get_model_state_dict(model: FSDP) -> dict[str, torch.Tensor]:
 def get_optimizer_state_dict(model: FSDP, optimizer: torch.optim.Optimizer) -> dict[str, torch.Tensor]:
     with FSDP.state_dict_type(
         model,
-        StateDictType.FULL_STATE_DICT,
-        None,
-        FullOptimStateDictConfig(offload_to_cpu=True, rank0_only=True),
+        state_dict_type=StateDictType.FULL_STATE_DICT,
+        state_dict_config=None,
+        optim_state_dict_config=FullOptimStateDictConfig(offload_to_cpu=True, rank0_only=True),
     ):
         state_dict = FSDP.optim_state_dict(model, optimizer)
 

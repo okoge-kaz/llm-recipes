@@ -30,7 +30,7 @@ def get_model(
     """
     args = get_args()
 
-    if "Llama" in model_name:
+    if "Llama" in model_name or "Swallow" in model_name:
         if args.low_cpu_fsdp:
             """
             for FSDP, we can save cpu memory by loading pretrained model on rank0 only.

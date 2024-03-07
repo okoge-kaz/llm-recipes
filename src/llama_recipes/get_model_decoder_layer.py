@@ -6,7 +6,7 @@ from transformers.models.mixtral.modeling_mixtral import MixtralDecoderLayer
 def get_model_decoder_layer(
     model_name: str,
 ) -> type[LlamaDecoderLayer] | type[MistralDecoderLayer] | type[MixtralDecoderLayer]:
-    if "Llama" in model_name:
+    if "Llama" in model_name or "Swallow" in model_name:
         return LlamaDecoderLayer
     elif "Mistral" in model_name or "mistral" in model_name:
         return MistralDecoderLayer

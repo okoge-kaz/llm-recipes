@@ -1,8 +1,8 @@
 #!/bin/bash
-#$ -l rt_AF=4
+#$ -l rt_AF=2
 #$ -l h_rt=1:00:00:00
 #$ -j y
-#$ -o outputs/mistral-7b-ve/the-vault/
+#$ -o outputs/instruction/swallow-13b/
 #$ -cwd
 
 # module load
@@ -47,51 +47,30 @@ done <"$SGE_JOB_HOSTLIST" >"$HOSTFILE_NAME"
 SEQ_LENGTH=4096
 DATA_PARALLEL_SIZE=$NUM_GPUS
 
-MICRO_BATCH_SIZE=8
-GLOBAL_BATCH_SIZE=1024
-TRAIN_STEPS=25000
+MICRO_BATCH_SIZE=2
+GLOBAL_BATCH_SIZE=256
 
 # optimizer config
 LR=2e-5
-MIN_LR=6.6e-7
-LR_WARMUP_STEPS=1000
-LR_DECAY_STEPS=25000
+MIN_LR=2e-6
 WEIGHT_DECAY=0.1
 GRAD_CLIP=1
 
 # checkpoint & tokenizer
-TOKENIZER_MODEL=/bb/llm/gaf51275/llama/mistral/swallow-mistral-7B-v0.1-merged-tokenizer-nfkc-16k-hf/merged_tokenizer_sp/jalm_llama.model
-CHECKPOINT_DIR=/bb/llm/gaf51275/llama/mistral/swallow-mistral-7B-v0.1-merged-tokenizer-nfkc-16k-hf
-CHECKPOINT_SAVE_DIR="/bb/llm/gaf51275/llama/checkpoints/mistral-7b-VE/the-vault-lr_${LR}-minlr_${MIN_LR}"
+TOKENIZER_MODEL=/bb/llm/gaf51275/llama/huggingface-checkpoint/Swallow-13b-hf/tokenizer.model
+CHECKPOINT_DIR=/bb/llm/gaf51275/llama/huggingface-checkpoint/Swallow-13b-hf
+CHECKPOINT_SAVE_DIR="/bb/llm/gaf51275/llama/checkpoints/Swallow-13b-VE-chat/oasst2-top1-imitation-2-3-lr_${LR}-minlr_${MIN_LR}-GB_${GLOBAL_BATCH_SIZE}"
 
 mkdir -p ${CHECKPOINT_SAVE_DIR}
 
-# data config
+# dataset
+DATASET_DIR=/bb/llm/gaf51275/llama/finetuning/datasets/training/oasst2-top1-imitation-2-3
 
-DATA_PATH=""
-
-# ja okazaki lab cc
-DATA_PATH="${DATA_PATH} 9603316427 /bb/llm/gaf51275/llama/datasets/mistral_16k_Llama2Tokenizer/okazaki_lab_cc_03_1500_split_0_text_document"
-DATA_PATH="${DATA_PATH} 9477885232 /bb/llm/gaf51275/llama/datasets/mistral_16k_Llama2Tokenizer/okazaki_lab_cc_03_1500_split_1_text_document"
-DATA_PATH="${DATA_PATH} 11289947192 /bb/llm/gaf51275/llama/datasets/mistral_16k_Llama2Tokenizer/okazaki_lab_cc_03_1500_split_2_text_document"
-DATA_PATH="${DATA_PATH} 14893976918 /bb/llm/gaf51275/llama/datasets/mistral_16k_Llama2Tokenizer/okazaki_lab_cc_03_1500_split_3_text_document"
-DATA_PATH="${DATA_PATH} 34740079578 /bb/llm/gaf51275/llama/datasets/mistral_16k_Llama2Tokenizer/okazaki_lab_cc_03_1500_split_4_text_document"
-
-# ja wikipedia
-DATA_PATH="${DATA_PATH} 1512820604 /bb/llm/gaf51275/llama/datasets/mistral_16k_Llama2Tokenizer/ja_wiki_merged_text_document"
-
-# en arxiv
-DATA_PATH="${DATA_PATH} 4528779220 /bb/llm/gaf51275/llama/datasets/mistral_16k_Llama2Tokenizer/arxiv_text_document"
-
-# en refinedweb
-DATA_PATH="${DATA_PATH} 4528779220 /bb/llm/gaf51275/llama/datasets/mistral_16k_Llama2Tokenizer/falcon_text_document"
-
-# the vault
-DATA_PATH="${DATA_PATH} 9424415609 /bb/llm/gaf51275/llama/datasets/mistral_16k_Llama2Tokenizer/The_Vault_text_document"
-
+TRAIN_DATA_PATH=${DATASET_DIR}/train.jsonl
+VALID_DATA_PATH=${DATASET_DIR}/val.jsonl
 
 # job name
-JOB_NAME="Mistral-7b-VE-the-vault-${NODE_TYPE}-${NUM_NODES}node-${NUM_GPUS}gpu-${SEQ_LENGTH}s-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}-WARMUP=${LR_WARMUP_STEPS}-WD=${WEIGHT_DECAY}-GC=${GRAD_CLIP}"
+JOB_NAME="Swallow-13b-VE-oasst2-top1-imitation-2-3-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}"
 
 # run
 mpirun -np $NUM_GPUS \
@@ -106,16 +85,16 @@ mpirun -np $NUM_GPUS \
   --sliding-window-size ${SEQ_LENGTH} \
   --micro-batch-size ${MICRO_BATCH_SIZE} \
   --global-batch-size ${GLOBAL_BATCH_SIZE} \
-  --train-iters ${TRAIN_STEPS} \
+  --hf-transformer-model-dir ${CHECKPOINT_DIR} \
   --tokenizer-type Llama2Tokenizer \
   --tokenizer-model ${TOKENIZER_MODEL} \
-  --data-path ${DATA_PATH} \
-  --split 949,50,1 \
+  --instruction-train-data-path ${TRAIN_DATA_PATH} \
+  --instruction-valid-data-path ${VALID_DATA_PATH} \
+  --epoch 2 \
+  --train-iters 500000 \
   --lr ${LR} \
   --min-lr ${MIN_LR} \
   --lr-decay-style cosine \
-  --lr-warmup-iters ${LR_WARMUP_STEPS} \
-  --lr-decay-iters ${LR_DECAY_STEPS} \
   --weight-decay ${WEIGHT_DECAY} \
   --grad-clip-norm ${GRAD_CLIP} \
   --optimizer adam \
@@ -124,7 +103,7 @@ mpirun -np $NUM_GPUS \
   --adam-eps 1e-6 \
   --save-interval 500 \
   --eval-interval 100 \
-  --eval-iters 10 \
+  --eval-iters 20 \
   --bf16 \
   --mixed-precision \
   --base-model ${CHECKPOINT_DIR} \
@@ -134,7 +113,9 @@ mpirun -np $NUM_GPUS \
   --sharding-strategy FULL_SHARD \
   --checkpoint-type LOCAL_STATE_DICT \
   --fsdp-activation-checkpointing \
+  --instruction-tuning \
+  --save-sampler-state \
   --use-mpi \
   --wandb-entity "prj-jalm" \
-  --wandb-project "abci-mistral-7b" \
+  --wandb-project "Llama-2-13b-instruct" \
   --wandb-name "${JOB_NAME}"

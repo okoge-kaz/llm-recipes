@@ -1,6 +1,6 @@
 #!/bin/bash
 #$ -l rt_AF=4
-#$ -l h_rt=9:8:00:00
+#$ -l h_rt=3:0:00:00
 #$ -j y
 #$ -o outputs/mistral-7b-ve/code-math/
 #$ -cwd

@@ -12,18 +12,6 @@ from llama_recipes.utils.distributed import print_rank_0
 from megatron_lm.megatron.global_vars import get_args, set_sampler
 
 
-PROMPT_DICT = {
-    "prompt_input": (
-        "以下に、あるタスクを説明する指示があり、それに付随する入力が更なる文脈を提供しています。"
-        "リクエストを適切に完了するための回答を記述してください。\n\n"
-        "### 指示:\n{instruction}\n\n### 入力:\n{input}\n\n### 応答:"
-    ),
-    "prompt_no_input": (
-        "以下に、あるタスクを説明する指示があります。" "リクエストを適切に完了するための回答を記述してください。\n\n" "### 指示:\n{instruction}\n\n### 応答:"
-    ),
-}
-
-
 class InstructDataset(Dataset):
     def __init__(
         self,
@@ -66,24 +54,36 @@ class InstructDataset(Dataset):
                 exit(1)
 
             try:
-                ann: dict[str, str] = json.loads(line)
+                conversations: dict[str, str | list[dict[str, str]]] = json.loads(line)
             except Exception as e:
                 print(f"index={index}, offset={offset}, line={line}, error={e}")
                 exit(1)
 
-        if ann.get("input", "") == "":
-            prompt: str = PROMPT_DICT["prompt_no_input"].format_map(ann)
-        else:
-            prompt = PROMPT_DICT["prompt_input"].format_map(ann)
+        SYSTEM_PROMPT = [
+            {"role": "system", "text": "あなたは誠実で優秀な日本人のアシスタントです。"}
+        ]
+        # chat template
+        prompt: str = self.tokenizer.apply_chat_template(
+            conversation=SYSTEM_PROMPT + conversations["input"],  # type: ignore
+            tokenize=False
+        )
 
-        example: str = prompt + ann["output"]
-        encoded_prompt: torch.Tensor = torch.tensor(self.tokenizer.encode(prompt), dtype=torch.int64)
-        encoded_example: list[int] = self.tokenizer.encode(example)
+        example: str = prompt + conversations["output"]  # type: ignore
+        encoded_prompt: torch.Tensor = torch.tensor(
+            self.tokenizer.encode(prompt, add_special_tokens=False),
+            dtype=torch.int64
+        )
+        encoded_example: list[int] = self.tokenizer.encode(
+            example, add_special_tokens=False
+        )
         encoded_example.append(self.tokenizer.eos_token_id)  # type: ignore
         encoded_tensor_example: torch.Tensor = torch.tensor(encoded_example, dtype=torch.int64)
 
+        if len(encoded_example) > self.max_words:
+            print(f"\n\nWARNING: example={example}\n\n")
+
         padding: int = self.max_words - encoded_tensor_example.shape[0]
-        if padding > 0:
+        if padding > 0:  # pad_token_id = 0 (substitute unk_token)
             encoded_tensor_example = torch.cat((encoded_tensor_example, torch.zeros(padding, dtype=torch.int64) - 1))
         elif padding < 0:
             encoded_tensor_example = encoded_tensor_example[: self.max_words]
@@ -95,7 +95,7 @@ class InstructDataset(Dataset):
         example_mask = encoded_tensor_example.ge(0)
         label_mask = labels.ge(0)
 
-        if torch.all(label_mask == 0):
+        if torch.all(label_mask == 0):  # len(output) == 0
             random_index: int = np.random.randint(0, len(self.indexes))
             self.__getitem__(random_index)
 
@@ -104,13 +104,10 @@ class InstructDataset(Dataset):
         # ~label_mask -> prompt の部分を ignore_index で埋める
         labels[~label_mask] = IGNORE_INDEX
 
-        example_mask = example_mask.float()
-        label_mask = label_mask.float()
-
         return {
             "input_ids": encoded_tensor_example,
             "labels": labels,
-            "attention_mask": example_mask,
+            "attention_mask": example_mask.float(),
         }
 
 
