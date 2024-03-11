@@ -22,22 +22,22 @@ export MASTER_PORT=$((10000 + ($JOB_ID % 50000)))
 
 echo "MASTER_ADDR=${MASTER_ADDR}"
 
-start=578
-end=578
+start=866
+end=866
 increment=5000
 
 for ((i = start; i <= end; i += increment)); do
   ITERATION=$i
   FORMATTED_ITERATION=$(printf "iter_%07d" $ITERATION)
 
-  CHECK_POINT_PATH=/bb/llm/gaf51275/llama/checkpoints/Swallow-70b-VE-chat/oasst2-top1-imitation-2-3-lr_1e-5-minlr_1e-6-GB_256/${FORMATTED_ITERATION}/model.pt
-  OUTPUT_PATH=/bb/llm/gaf51275/llama/converted-hf-checkpoint/Swallow-70b-VE-chat/oasst2-top1-imitation-2-3-lr_1e-5-minlr_1e-6-GB_256/${FORMATTED_ITERATION}
+  CHECK_POINT_PATH=//bb/llm/gaf51275/llama/checkpoints/Swallow-13b-VE-chat/baseline-imitation-2-lr_2e-5-minlr_2e-6-GB_256/${FORMATTED_ITERATION}/model.pt
+  OUTPUT_PATH=/bb/llm/gaf51275/llama/converted-hf-checkpoint/Swallow-13b-VE-chat/baseline-imitation-2-lr_2e-5-minlr_2e-6-GB_256/${FORMATTED_ITERATION}
 
   echo "convert ${CHECK_POINT_PATH} to ${OUTPUT_PATH}"
 
   mkdir -p $OUTPUT_PATH
 
-  BASE_MODEL_CHECKPOINT=/bb/llm/gaf51275/llama/huggingface-checkpoint/Swallow-70b-hf
+  BASE_MODEL_CHECKPOINT=/bb/llm/gaf51275/llama/huggingface-checkpoint/Swallow-13b-hf
 
   python tools/checkpoint-convert/convert_ckpt.py \
     --model $BASE_MODEL_CHECKPOINT \

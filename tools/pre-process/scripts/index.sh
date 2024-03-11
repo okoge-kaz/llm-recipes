@@ -4,37 +4,16 @@ source .env/bin/activate
 
 INPUT_DIR=/bb/llm/gaf51275/llama/finetuning/datasets/training
 
-# baseline
+# dolly-oasst2-top1-imitation-2-3
 python tools/pre-process/index_dataset.py \
-  --data-file-path $INPUT_DIR/baseline/train.jsonl
+  --data-file-path $INPUT_DIR/dolly-oasst2-top1-imitation-2-3/train.jsonl
 
 python tools/pre-process/index_dataset.py \
-  --data-file-path $INPUT_DIR/baseline/val.jsonl
+  --data-file-path $INPUT_DIR/dolly-oasst2-top1-imitation-2-3/val.jsonl
 
-# baseline-imitation_2
+# oasst2-top1-imitation-2-3
 python tools/pre-process/index_dataset.py \
-  --data-file-path $INPUT_DIR/baseline-imitation_2/train.jsonl
-
-python tools/pre-process/index_dataset.py \
-  --data-file-path $INPUT_DIR/baseline-imitation_2/val.jsonl
-
-# ichikara
-python tools/pre-process/index_dataset.py \
-  --data-file-path $INPUT_DIR/ichikara/train.jsonl
+  --data-file-path $INPUT_DIR/oasst2-top1-imitation-2-3/train.jsonl
 
 python tools/pre-process/index_dataset.py \
-  --data-file-path $INPUT_DIR/ichikara/val.jsonl
-
-# imitation_1_and_2
-python tools/pre-process/index_dataset.py \
-  --data-file-path $INPUT_DIR/imitation_1_and_2/train.jsonl
-
-python tools/pre-process/index_dataset.py \
-  --data-file-path $INPUT_DIR/imitation_1_and_2/val.jsonl
-
-# imitation_2_oasst2_top1
-python tools/pre-process/index_dataset.py \
-  --data-file-path $INPUT_DIR/imitation_2_oasst2_top1/train.jsonl
-
-python tools/pre-process/index_dataset.py \
-  --data-file-path $INPUT_DIR/imitation_2_oasst2_top1/val.jsonl
+  --data-file-path $INPUT_DIR/oasst2-top1-imitation-2-3/val.jsonl
