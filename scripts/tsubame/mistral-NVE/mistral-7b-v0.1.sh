@@ -2,8 +2,8 @@
 #$ -cwd
 #$ -l node_f=4
 #$ -l h_rt=24:00:00
-#$ -o outputs/mistral-7b-NVE/${JOB_ID}.out
-#$ -e outputs/mistral-7b-NVE/${JOB_ID}.out
+#$ -o outputs/mistral-7b-NVE/$JOB_ID
+#$ -e outputs/mistral-7b-NVE/$JOB_ID
 #$ -p -3
 
 # priotiry: -5: normal, -4: high, -3: highest
