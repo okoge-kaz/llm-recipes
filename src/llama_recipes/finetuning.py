@@ -7,7 +7,6 @@ from torch.distributed.fsdp.fully_sharded_data_parallel import CPUOffload  # typ
 import torch.optim as optim
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP  # type: ignore
 from torch.optim.lr_scheduler import StepLR
-from peft import prepare_model_for_int8_training  # type: ignore
 import wandb
 
 from llama_recipes.policies import AnyPrecisionAdamW, apply_fsdp_checkpointing
@@ -112,10 +111,6 @@ def main() -> None:
             print("Module 'optimum' not found. Please install 'optimum' it before proceeding.")
 
     print_model_size(model, args.base_model, rank)  # type: ignore
-
-    # Prepare the model for int8 training if quantization is enabled
-    if args.quantization:
-        model = prepare_model_for_int8_training(model)
 
     # Convert the model to bfloat16 if fsdp and pure_bf16 is enabled
     if args.bf16:
