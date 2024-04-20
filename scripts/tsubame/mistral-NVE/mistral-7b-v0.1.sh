@@ -4,7 +4,7 @@
 #$ -l h_rt=24:00:00
 #$ -o outputs/mistral-7b-NVE/$JOB_ID
 #$ -e outputs/mistral-7b-NVE/$JOB_ID
-#$ -p -3
+#$ -p -5
 
 # priotiry: -5: normal, -4: high, -3: highest
 
@@ -66,8 +66,39 @@ mkdir -p ${CHECKPOINT_SAVE_DIR}
 
 DATA_PATH=""
 
-# ja okazaki lab cc
-DATA_PATH="${DATA_PATH} /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/okazaki_lab_cc_03_1500_split_0_text_document"
+# ja swallow corpus
+DATA_PATH="${DATA_PATH} 6864394213 /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/okazaki_lab_cc_03_1500_split_0_text_document"
+DATA_PATH="${DATA_PATH} 6793253694 /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/okazaki_lab_cc_03_1500_split_1_text_document"
+DATA_PATH="${DATA_PATH} 8113089568 /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/okazaki_lab_cc_03_1500_split_2_text_document"
+DATA_PATH="${DATA_PATH} 10699983701 /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/okazaki_lab_cc_03_1500_split_3_text_document"
+DATA_PATH="${DATA_PATH} 25034318303 /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/okazaki_lab_cc_03_1500_split_4_text_document"
+
+# ja wikipedia
+DATA_PATH="${DATA_PATH} 2494960521 /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/jawiki-20211020-split_0_text_document"
+
+# en wikipedia
+DATA_PATH="${DATA_PATH} 5207046599 /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/en_wiki_merged_train_text_document"
+
+# en arxiv
+DATA_PATH="${DATA_PATH} 5000000000 /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/lumi_en_arxiv_merge_text_document"
+
+# en dolma guthenberg
+DATA_PATH="${DATA_PATH} 5664226133 /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/dolma-books_0000_text_document"
+
+# en dolma pes2o
+DATA_PATH="${DATA_PATH} 525260332 /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/dolma-pes2o_0000_text_document"
+DATA_PATH="${DATA_PATH} 1327612768 /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/dolma-pes2o_0001_text_document"
+DATA_PATH="${DATA_PATH} 1225666454 /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/dolma-pes2o_0002_text_document"
+DATA_PATH="${DATA_PATH} 1050187713 /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/dolma-pes2o_0003_text_document"
+
+# code algebraic
+DATA_PATH="${DATA_PATH} 10947472880 /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/algebraic-stack_text_document"
+
+# code vault
+DATA_PATH="${DATA_PATH} 6397445540 /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/The_Vault_text_document"
+
+# code starcoderJA
+DATA_PATH="${DATA_PATH} 2655081580 /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/starcoderdata_ja_text_text_document"
 
 # job name
 JOB_NAME="Mistral-7b-NVE-t4-${NODE_TYPE}-${NUM_NODES}node-${NUM_GPUS}gpu-${SEQ_LENGTH}s-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}-WARMUP=${LR_WARMUP_STEPS}-WD=${WEIGHT_DECAY}-GC=${GRAD_CLIP}"
