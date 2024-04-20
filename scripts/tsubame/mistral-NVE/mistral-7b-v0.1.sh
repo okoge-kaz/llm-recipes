@@ -1,6 +1,6 @@
 #!/bin/sh
 #$ -cwd
-#$ -l node_f=4
+#$ -l node_f=16
 #$ -l h_rt=24:00:00
 #$ -o outputs/mistral-7b-NVE/$JOB_ID
 #$ -e outputs/mistral-7b-NVE/$JOB_ID
@@ -74,7 +74,7 @@ DATA_PATH="${DATA_PATH} 10699983701 /gs/bs/tge-gc24sp01/datasets/mistral_origina
 DATA_PATH="${DATA_PATH} 25034318303 /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/okazaki_lab_cc_03_1500_split_4_text_document"
 
 # ja wikipedia
-DATA_PATH="${DATA_PATH} 2494960521 /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/jawiki-20211020-split_0_text_document"
+DATA_PATH="${DATA_PATH} 2494960521 /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/ja_wiki_merged_text_document"
 
 # en wikipedia
 DATA_PATH="${DATA_PATH} 5207046599 /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/en_wiki_merged_train_text_document"
