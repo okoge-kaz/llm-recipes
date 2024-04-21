@@ -1,7 +1,7 @@
 #!/bin/sh
 #$ -cwd
 #$ -l node_f=16
-#$ -l h_rt=24:00:00
+#$ -l h_rt=12:00:00
 #$ -o outputs/mistral-7b-NVE/$JOB_ID
 #$ -e outputs/mistral-7b-NVE/$JOB_ID
 #$ -p -5
