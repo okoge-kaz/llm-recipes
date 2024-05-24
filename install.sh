@@ -9,10 +9,13 @@ set -e
 
 # module load
 source /etc/profile.d/modules.sh
-module load cuda/11.8/11.8.0
-module load cudnn/8.9/8.9.2
-module load nccl/2.16/2.16.2-1
+module use /groups/gag51395/modules/modulefiles
+
+module load cuda/12.1/12.1.1
+module load cudnn/cuda-12.1/9.0.0
+module load nccl/2.17/2.17.1-1
 module load hpcx/2.12
+module load gcc/11.4.0
 
 # swich virtual env
 source .env/bin/activate
@@ -31,6 +34,4 @@ pip install huggingface_hub
 
 # install flash-atten
 pip install ninja packaging wheel
-pip install flash-attn==2.3.6 --no-build-isolation
-
-# flash-attn==2.4.2 may require cuda 12.x
+pip install flash-attn --no-build-isolation
