@@ -118,38 +118,43 @@ def log_wandb(
     wandb_stats["stats/tokens_per_sec"] = tokens_per_sec
     wandb_stats["stats/tokens_per_sec_per_gpu"] = tokens_per_sec / world_size
 
-    checkpoint_activations_factor = 3
-
     num_layers: int = model.config.num_hidden_layers
     hidden_size: int = model.config.hidden_size
     vocab_size: int = model.config.vocab_size
     activation_func: str = model.config.hidden_act
     intermediate_size: int = model.config.intermediate_size
 
-    activation_function_factor: int = 4  # GELU
+    num_experts_routed_to: int = 1
+    if hasattr(model.config, "num_experts_per_tok"):
+        num_experts_routed_to = model.config.num_experts_per_tok
+
+    activation_function_factor: float = 1  # GELU
     if activation_func == "silu":
-        activation_function_factor = 4 + 2  # SWiGLU (upscaling + down scaling)
+        activation_function_factor = 1 + 0.5  # SWiGLU (upscaling + down scaling)
+    num_attention_heads: int = model.config.num_attention_heads
 
     batch_size = batch_size * gradient_accumulation_steps
-    num_query_groups: int = model.config.num_attention_heads / model.config.num_key_value_heads
+    kv_channels = hidden_size // num_attention_heads
+    query_projection_size = kv_channels * num_attention_heads
+    query_projection_to_hidden_size_ratio = query_projection_size / hidden_size
 
     # tflops calculation
-    flops_per_iteration: float = checkpoint_activations_factor * (
-        (
-            (2 + (2 * 3) + activation_function_factor * (intermediate_size / hidden_size))
-            * batch_size
-            * sequence_length
-            * num_layers
-            * (hidden_size**2)
-        )
-        + (
+    flops_per_iteration: float = (
+        12
+        * batch_size
+        * sequence_length
+        * (hidden_size**2)
+        * num_layers
+        * (
             (
-                (4 * batch_size * (sequence_length**2) * hidden_size)  # Attention matrix & attention over values
-                / num_query_groups
+                # Attention
+                (1 + (model.config.num_key_value_heads / num_attention_heads) + (sequence_length / hidden_size))
+                * query_projection_to_hidden_size_ratio
             )
-            +  # noqa: W504
-            # lm-head: logit layer
-            2 * batch_size * sequence_length * hidden_size * vocab_size
+            # MLP
+            + ((intermediate_size / hidden_size) * num_experts_routed_to * activation_function_factor)
+            # Logit
+            + (vocab_size / (2 * num_layers * hidden_size))
         )
     )
     tflops: float = flops_per_iteration / (iteration_elapsed_time * (10**12))
