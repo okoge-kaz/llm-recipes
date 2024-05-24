@@ -2,10 +2,9 @@
 torch==2.2.2+cu121
 
 # huggingface
-transformers>=4.40.1
+transformers>=4.41.1
 datasets
 accelerate
-optimum
 peft
 
 appdirs
