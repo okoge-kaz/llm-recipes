@@ -3,7 +3,7 @@ import argparse
 import os
 
 # 引数パーサーを設定
-parser = argparse.ArgumentParser("kotoba-recipes")
+parser = argparse.ArgumentParser("llm-recipes")
 parser.add_argument("--data-file-path", type=str, required=True)
 args = parser.parse_args()
 
