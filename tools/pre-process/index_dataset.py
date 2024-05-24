@@ -6,7 +6,7 @@ import tempfile
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser("kotoba-recipes")
+    parser = argparse.ArgumentParser("llm-recipes")
     parser.add_argument("--data-file-path", type=str, default="")
     args = parser.parse_args()
     return args

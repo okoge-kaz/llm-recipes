@@ -1,4 +1,4 @@
-# Kotoba Recipes
+# LLM Recipes
 
 # Table of Contents
 
@@ -34,7 +34,7 @@ pip install flash-attn --no-build-isolation
 
 ### ABCI
 
-If you use [ABCI](https://abci.ai/) to run the experiments, install scripts are available in `kotoba-recipes/install.sh`.
+If you use [ABCI](https://abci.ai/) to run the experiments, install scripts are available in `llm-recipes/install.sh`.
 
 ## Instruction Tuning
 
