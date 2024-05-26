@@ -1,6 +1,6 @@
 #!/bin/bash
 #$ -l rt_AF=4
-#$ -l h_rt=30:00:00:00
+#$ -l h_rt=10:00:00:00
 #$ -j y
 #$ -o outputs/phi-3/
 #$ -cwd
@@ -99,6 +99,8 @@ DATA_PATH="${DATA_PATH} 115215400 /bb/llm/gaf51275/datasets/Phi-3_original_trans
 DATA_PATH="${DATA_PATH} 1120661316 /bb/llm/gaf51275/datasets/Phi-3_original_transformers-4.40.1/cosmopedia_stanford_train_text_document"
 DATA_PATH="${DATA_PATH} 3131907229 /bb/llm/gaf51275/datasets/Phi-3_original_transformers-4.40.1/cosmopedia_stories_train_text_document"
 DATA_PATH="${DATA_PATH} 195599284 /bb/llm/gaf51275/datasets/Phi-3_original_transformers-4.40.1/cosmopedia_wikihow_train_text_document"
+
+# code algebraic stack
 DATA_PATH="${DATA_PATH} 10903912936 /bb/llm/gaf51275/datasets/Phi-3_original_transformers-4.40.1/algebraic-stack_text_document"
 
 
