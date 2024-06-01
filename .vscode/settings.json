@@ -18,6 +18,7 @@
     "anyprecision",
     "autocast",
     "bettertransformer",
+    "Codestral",
     "colour",
     "Concatenator",
     "detokenize",
