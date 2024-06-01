@@ -182,9 +182,6 @@ def _add_training_args(parser: argparse.ArgumentParser) -> argparse.ArgumentPars
     group.add_argument("--save", type=str, default=None)
     group.add_argument("--base-model", type=str, default=None)
 
-    # use flash attention, better transformer
-    group.add_argument("--use-better-transformer", action="store_true")
-
     group.add_argument("--grad-clip-norm", type=float, default=1.0)
 
     # interval

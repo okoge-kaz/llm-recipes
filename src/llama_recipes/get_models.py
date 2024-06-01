@@ -58,7 +58,7 @@ def get_model(
 
         return model  # type: ignore
 
-    elif "Mistral" in model_name or "mistral" in model_name:
+    elif "Mistral" in model_name or "mistral" in model_name or "Codestral" in model_name:
         # If using torch.device("meta"), FSDP training hang
         # FYI: https://github.com/iwiwi/epochraft-hf-fsdp/pull/10#issuecomment-1803360147
         # https://github.com/pytorch/pytorch/issues/105840 are maybe helpful
@@ -82,6 +82,21 @@ def get_model(
     elif "Phi-3" in model_name:
 
         model = Phi3ForCausalLM.from_pretrained(
+            model_name,
+            load_in_8bit=True if args.quantization else None,
+            device_map="auto" if args.quantization else None,
+            use_cache=use_cache,
+            max_position_embeddings=args.seq_length,
+            attn_implementation="flash_attention_2",
+            torch_dtype=torch.bfloat16 if args.bf16 else torch.float16,
+        )
+
+        return model  # type: ignore
+
+    elif "Yi-1.5" in model_name:
+        # https://huggingface.co/01-ai/Yi-1.5-9B/blob/main/config.json
+
+        model = LlamaForCausalLM.from_pretrained(
             model_name,
             load_in_8bit=True if args.quantization else None,
             device_map="auto" if args.quantization else None,

@@ -10,7 +10,7 @@ def is_sentencepiece_model(file_path):
         return False
 
 
-file_path = '/bb/llm/gaf51275/hf-checkpoints/Phi-3-medium-4k-instruct/tokenizer.model'
+file_path = '/home/ext_kazuki_fujii_rio_gsic_titech/hf_checkpoints/Codestral-22B-v0.1/tokenizer.model'
 if is_sentencepiece_model(file_path):
     print("The file is a SentencePiece model.")
 else:

@@ -102,14 +102,6 @@ def main() -> None:
     if args.load:
         load_model_state_dict(model, args.load)  # type: ignore
 
-    if args.use_better_transformer:
-        try:
-            from optimum.bettertransformer import BetterTransformer
-
-            model = BetterTransformer.transform(model)  # type: ignore
-        except ImportError:
-            print("Module 'optimum' not found. Please install 'optimum' it before proceeding.")
-
     print_model_size(model, args.base_model, rank)  # type: ignore
 
     # Convert the model to bfloat16 if fsdp and pure_bf16 is enabled

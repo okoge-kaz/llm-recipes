@@ -1,6 +1,5 @@
 import os
 import time
-from pkg_resources import packaging  # type: ignore
 from contextlib import nullcontext
 
 import torch
@@ -328,7 +327,6 @@ def get_policies(rank: int, model_name: str):
     verify_bfloat_support: bool = (
         torch.version.cuda  # type: ignore
         and torch.cuda.is_bf16_supported()
-        and packaging.version.parse(torch.version.cuda).release >= (11, 0)  # type: ignore
         and torch_distributed.is_nccl_available()
         and nccl.version() >= (2, 10)
     )

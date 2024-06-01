@@ -1,6 +1,6 @@
 #!/bin/bash
 #$ -l rt_AF=4
-#$ -l h_rt=5:0:00:00
+#$ -l h_rt=10:00:00:00
 #$ -j y
 #$ -o outputs/phi-3/
 #$ -cwd
@@ -73,8 +73,36 @@ mkdir -p ${CHECKPOINT_SAVE_DIR}
 
 DATA_PATH=""
 
+# Swallow v1
+DATA_PATH="${DATA_PATH} 9108171060 /bb/llm/gaf51275/datasets/Phi-3_original_transformers-4.40.1/split_0_text_document"
+DATA_PATH="${DATA_PATH} 9017389663 /bb/llm/gaf51275/datasets/Phi-3_original_transformers-4.40.1/split_1_text_document"
+DATA_PATH="${DATA_PATH} 10781891782 /bb/llm/gaf51275/datasets/Phi-3_original_transformers-4.40.1/split_2_text_document"
+DATA_PATH="${DATA_PATH} 14229527811 /bb/llm/gaf51275/datasets/Phi-3_original_transformers-4.40.1/split_3_text_document"
+DATA_PATH="${DATA_PATH} 33251122086 /bb/llm/gaf51275/datasets/Phi-3_original_transformers-4.40.1/split_4_text_document"
+
 # ja wikipedia
-DATA_PATH="${DATA_PATH} 2657688677 /bb/llm/gaf51275/binarized/phi-3-default/ja_wiki_text_document"
+DATA_PATH="${DATA_PATH} 2659052072 /bb/llm/gaf51275/datasets/Phi-3_original_transformers-4.40.1/ja_wiki_merged_text_document"
+
+# parallel corpus
+DATA_PATH="${DATA_PATH} 1265915426 /bb/llm/gaf51275/datasets/Phi-3_original_transformers-4.40.1/default_plain_text_format_text_document"
+
+# en wikipedia
+DATA_PATH="${DATA_PATH} 1400935123 /bb/llm/gaf51275/datasets/Phi-3_original_transformers-4.40.1/en_wiki_merged_train_text_document"
+
+# en refinedweb
+DATA_PATH="${DATA_PATH} 1400935123 /bb/llm/gaf51275/datasets/Phi-3_original_transformers-4.40.1/lumi_en_falcon_merge_text_document"
+
+# en cosmopedia
+DATA_PATH="${DATA_PATH} 1394911660 /bb/llm/gaf51275/datasets/Phi-3_original_transformers-4.40.1/cosmopedia_automathtext_train_text_document"
+DATA_PATH="${DATA_PATH} 22852028 /bb/llm/gaf51275/datasets/Phi-3_original_transformers-4.40.1/cosmopedia_khanacademy_train_text_document"
+DATA_PATH="${DATA_PATH} 115215400 /bb/llm/gaf51275/datasets/Phi-3_original_transformers-4.40.1/cosmopedia_openstax_train_text_document"
+DATA_PATH="${DATA_PATH} 1120661316 /bb/llm/gaf51275/datasets/Phi-3_original_transformers-4.40.1/cosmopedia_stanford_train_text_document"
+DATA_PATH="${DATA_PATH} 3131907229 /bb/llm/gaf51275/datasets/Phi-3_original_transformers-4.40.1/cosmopedia_stories_train_text_document"
+DATA_PATH="${DATA_PATH} 195599284 /bb/llm/gaf51275/datasets/Phi-3_original_transformers-4.40.1/cosmopedia_wikihow_train_text_document"
+
+# code algebraic stack
+DATA_PATH="${DATA_PATH} 10903912936 /bb/llm/gaf51275/datasets/Phi-3_original_transformers-4.40.1/algebraic-stack_text_document"
+
 
 # job name
 JOB_NAME="Phi-3-ABCI-${NODE_TYPE}-${NUM_NODES}node-${NUM_GPUS}gpu-${SEQ_LENGTH}s-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}-WARMUP=${LR_WARMUP_STEPS}-WD=${WEIGHT_DECAY}-GC=${GRAD_CLIP}"
