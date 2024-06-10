@@ -99,13 +99,13 @@ class GPTDataset(MegatronDataset):
         """
         text, _ = self._query_document_sample_shuffle_indices(idx)
 
-        text = torch.from_numpy(text)
+        text = torch.from_numpy(text).long()
 
-        tokens = text.long()
-        labels = tokens.clone()
+        tokens = text.contiguous()
+        labels = text.clone().contiguous()
 
         # HF Transformers automatically shift input_ids and labels, so don't shift manually.
-        # ref: Mistral https://github.com/huggingface/transformers/blob/main/src/transformers/models/mistral/modeling_mistral.py#L1171-L1174
+        # ref: Mistral https://github.com/huggingface/transformers/blob/48d35b21789ad80a90ea242e46cb1d53e4db4f1c/src/transformers/models/mistral/modeling_mistral.py#L1211-L1212
         # ref: https://discuss.huggingface.co/t/where-does-the-transformers-do-the-target-text-shifting-in-causal-lm/32408/4
         # Also, if attention mask is all 1(= True), you don't have to pass attention mask.
         # HF Transformers' attention mask is 1 D. so like this. [1, 1, 1, ...., 0, 0]
