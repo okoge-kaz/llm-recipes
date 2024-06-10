@@ -122,7 +122,7 @@ py::array build_sample_idx(const py::array_t<int32_t> &sizes_,
   while (sample_index <= num_samples)
   {
     // Start with a fresh sequence.
-    int32_t remaining_seq_length = seq_length + 1;
+    int32_t remaining_seq_length = seq_length;
     while (remaining_seq_length != 0)
     {
       // Get the document length.
