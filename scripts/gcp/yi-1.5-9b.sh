@@ -2,7 +2,7 @@
 #SBATCH --job-name=yi-1.5-9b
 #SBATCH --partition=a3
 #SBATCH --exclusive
-#SBATCH --nodes 2
+#SBATCH --nodes 1
 #SBATCH --gpus-per-node=8
 #SBATCH --ntasks-per-node=8
 #SBATCH --output=outputs/yi-1.5-9b/%x-%j.out
