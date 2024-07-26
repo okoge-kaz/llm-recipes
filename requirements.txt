@@ -1,5 +1,5 @@
 --find-links https://download.pytorch.org/whl/torch_stable.html
-torch==2.2.2+cu121
+torch==2.3.1+cu121
 
 # huggingface
 transformers>=4.41.1
