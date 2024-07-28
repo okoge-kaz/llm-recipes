@@ -3,6 +3,7 @@ from transformers import (
     LlamaForCausalLM,
     MistralForCausalLM,
     Phi3ForCausalLM,
+    Gemma2ForCausalLM,
     AutoModelForCausalLM,
 )
 from llama_recipes.utils.distributed import is_rank_0
@@ -12,7 +13,7 @@ from megatron_lm.megatron.global_vars import get_args
 
 def get_model(
     model_name: str, use_cache: bool = False
-) -> LlamaForCausalLM | MistralForCausalLM | AutoModelForCausalLM:
+) -> LlamaForCausalLM | MistralForCausalLM | Phi3ForCausalLM | Gemma2ForCausalLM:
     """return CausalLM model
 
     Args:
@@ -97,6 +98,19 @@ def get_model(
         # https://huggingface.co/01-ai/Yi-1.5-9B/blob/main/config.json
 
         model = LlamaForCausalLM.from_pretrained(
+            model_name,
+            load_in_8bit=True if args.quantization else None,
+            device_map="auto" if args.quantization else None,
+            use_cache=use_cache,
+            max_position_embeddings=args.seq_length,
+            attn_implementation="flash_attention_2",
+            torch_dtype=torch.bfloat16 if args.bf16 else torch.float16,
+        )
+
+        return model  # type: ignore
+
+    elif "gemma-2" in model_name:
+        model = Gemma2ForCausalLM.from_pretrained(
             model_name,
             load_in_8bit=True if args.quantization else None,
             device_map="auto" if args.quantization else None,
