@@ -4,7 +4,8 @@ import os
 
 import numpy as np
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
+import torch.distributed as torch_distributed
 from transformers.tokenization_utils import PreTrainedTokenizer
 from pathlib import Path
 from llama_recipes.utils.distributed import print_rank_0
@@ -125,7 +126,7 @@ def get_instruction_tuning_dataloader(
     tokenizer: PreTrainedTokenizer,
     data_path: str,
     train: bool = False,
-) -> torch.utils.data.DataLoader:
+) -> DataLoader:
     from llama_recipes.utils.sequence_length_warmup import CustomDistributedSampler
     from llama_recipes.utils.checkpoint import load_sampler_state_dict
 
@@ -142,8 +143,8 @@ def get_instruction_tuning_dataloader(
 
     train_sampler = CustomDistributedSampler(
         dataset=instruction_dataset,
-        rank=torch.distributed.get_rank(),
-        num_replicas=torch.distributed.get_world_size(),
+        rank=torch_distributed.get_rank(),
+        num_replicas=torch_distributed.get_world_size(),
         shuffle=True,
         seed=args.seed,
     )
@@ -153,7 +154,7 @@ def get_instruction_tuning_dataloader(
 
     set_sampler(sampler=train_sampler)
 
-    return torch.utils.data.DataLoader(
+    return DataLoader(
         instruction_dataset,
         batch_size=args.micro_batch_size,
         sampler=train_sampler,
