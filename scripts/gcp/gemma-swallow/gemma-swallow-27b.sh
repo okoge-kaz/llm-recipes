@@ -82,16 +82,16 @@ GLOBAL_BATCH_SIZE=512
 TRAIN_STEPS=25000
 
 # optimizer config
-LR=2.5E-5
-MIN_LR=2.5E-6
+LR=1.5E-5
+MIN_LR=1.5E-6
 LR_WARMUP_STEPS=1000
 LR_DECAY_STEPS=25000
 WEIGHT_DECAY=0.1
 GRAD_CLIP=1
 # model config
-TOKENIZER_MODEL=/home/ext_kazuki_fujii_turing_motors_c/hf-checkpoints/gemma-2-9b/tokenizer.model
-CHECKPOINT_DIR=/home/ext_kazuki_fujii_turing_motors_c/hf-checkpoints/gemma-2-9b
-CHECKPOINT_SAVE_DIR="/data/checkpoints/gemma-2-9b/LR${LR}-MINLR${MIN_LR}-WARMUP${LR_WARMUP_STEPS}-WD${WEIGHT_DECAY}-GC${GRAD_CLIP}"
+TOKENIZER_MODEL=/home/ext_kazuki_fujii_turing_motors_c/hf-checkpoints/gemma-2-27b/tokenizer.model
+CHECKPOINT_DIR=/home/ext_kazuki_fujii_turing_motors_c/hf-checkpoints/gemma-2-27b
+CHECKPOINT_SAVE_DIR="/data/checkpoints/gemma-2-27b/LR${LR}-MINLR${MIN_LR}-WARMUP${LR_WARMUP_STEPS}-WD${WEIGHT_DECAY}-GC${GRAD_CLIP}"
 
 mkdir -p ${CHECKPOINT_SAVE_DIR}
 
@@ -164,7 +164,7 @@ mpirun -np $NUM_GPUS \
   --adam-beta1 0.9 \
   --adam-beta2 0.95 \
   --adam-eps 1e-8 \
-  --save-interval 500 \
+  --save-interval 250 \
   --eval-interval 100 \
   --eval-iters 10 \
   --bf16 \
