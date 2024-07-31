@@ -110,6 +110,7 @@ class InstructDataset(Dataset):
 
         # ~label_mask -> prompt の部分を ignore_index で埋める
         labels[~label_mask] = IGNORE_INDEX
+        labels[labels == eos_token_id] = IGNORE_INDEX
         # mask out pad token
         attention_mask = (tensor_example != eos_token_id).float()
 

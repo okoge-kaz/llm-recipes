@@ -49,7 +49,8 @@ sys.path.append(f"{current_path}/llama-recipes/src/")
 def main() -> None:
     # initialize
     args = parse_args()
-    set_global_variables(args=args)
+    is_pretraining = not (args.instruction_tuning or args.direct_preference_optimization)
+    set_global_variables(args=args, build_tokenizer=is_pretraining)
 
     # Set the seeds for reproducibility
     set_seed(seed=args.seed)
