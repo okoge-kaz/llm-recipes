@@ -4,12 +4,16 @@
 #$ -j y
 #$ -o outputs/convert/ckpt/
 #$ -cwd
+
 # module load
 source /etc/profile.d/modules.sh
-module load cuda/11.8/11.8.0
-module load cudnn/8.9/8.9.2
-module load nccl/2.16/2.16.2-1
+module use /bb/llm/gaf51275/modules/modulefiles
+
+module load cuda/12.1/12.1.1
+module load cudnn/cuda-12.1/9.0.0
+module load nccl/2.20.5
 module load hpcx/2.12
+module load gcc/11.4.0
 
 set -e
 
