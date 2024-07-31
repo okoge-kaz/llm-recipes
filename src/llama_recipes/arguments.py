@@ -20,6 +20,8 @@ def parse_args() -> argparse.Namespace:
     # validate
     if args.use_freeze_layers:
         assert args.no_save_optimizer_state is True
+    # adam epsilon is very sensitive value so don't change
+    assert args.adam_eps == 1e-8
 
     return args
 
