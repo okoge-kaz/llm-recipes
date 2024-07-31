@@ -25,6 +25,10 @@ class InstructDataset(Dataset):
         self.max_words: int = args.seq_length
         self.tokenizer = tokenizer
 
+        # system prompt
+        self.system_prompt_role = args.system_prompt_role
+        self.system_prompt_content = args.system_prompt_content
+
         # index file
         dataset_dir = Path(self.data_path).parent
         index_cache_dir = dataset_dir / ".index_cache"
@@ -55,60 +59,64 @@ class InstructDataset(Dataset):
                 exit(1)
 
             try:
-                conversations: dict[str, str | list[dict[str, str]]] = json.loads(line)
+                conversations: dict[str, list[dict[str, str]] | str] = json.loads(line)
             except Exception as e:
                 print(f"index={index}, offset={offset}, line={line}, error={e}")
                 exit(1)
 
-        SYSTEM_PROMPT = [
-            {"role": "system", "text": "あなたは誠実で優秀な日本人のアシスタントです。"}
+        SYSTEM_PROMPT: list[dict[str, str]] = [
+            {
+                "role": self.system_prompt_role,
+                "content": self.system_prompt_content,
+            }
         ]
         # chat template
-        prompt: str = self.tokenizer.apply_chat_template(
+        prompt = self.tokenizer.apply_chat_template(
             conversation=SYSTEM_PROMPT + conversations["input"],  # type: ignore
-            tokenize=False
+            add_generation_prompt=True,
+            tokenize=True,
         )
 
-        example: str = prompt + conversations["output"]  # type: ignore
-        encoded_prompt: torch.Tensor = torch.tensor(
-            self.tokenizer.encode(prompt, add_special_tokens=False),
-            dtype=torch.int64
+        example = self.tokenizer.apply_chat_template(
+            conversation=SYSTEM_PROMPT + conversations["input"] + [  # type: ignore
+                {"role": "assistant", "content": conversations["output"]}
+            ],
+            tokenize=True,
         )
-        encoded_example: list[int] = self.tokenizer.encode(
-            example, add_special_tokens=False
-        )
-        encoded_example.append(self.tokenizer.eos_token_id)  # type: ignore
-        encoded_tensor_example: torch.Tensor = torch.tensor(encoded_example, dtype=torch.int64)
+        tensor_example: torch.Tensor = torch.tensor(example, dtype=torch.int64)
 
-        if len(encoded_example) > self.max_words:
+        if len(example) > self.max_words:
             print(f"\n\nWARNING: example={example}\n\n")
 
-        padding: int = self.max_words - encoded_tensor_example.shape[0]
-        if padding > 0:  # pad_token_id = 0 (substitute unk_token)
-            encoded_tensor_example = torch.cat((encoded_tensor_example, torch.zeros(padding, dtype=torch.int64) - 1))
-        elif padding < 0:
-            encoded_tensor_example = encoded_tensor_example[: self.max_words]
+        padding_length: int = self.max_words - len(example)
+        eos_token_id: int = self.tokenizer.encode("<|end_of_text|>", add_special_tokens=False)[0]
+        pad_token_id = eos_token_id
+        if padding_length > 0:
+            pad_tensor = torch.full(
+                (padding_length,), pad_token_id, dtype=torch.int64
+            )
+            tensor_example = torch.cat((tensor_example, pad_tensor))
+        elif padding_length < 0:
+            tensor_example = tensor_example[: self.max_words]
 
-        labels = copy.deepcopy(encoded_tensor_example)
+        labels = copy.deepcopy(tensor_example)
         # promptの長さ分だけ -1 で埋める -> 損失関数で無視するようになる
-        labels[: len(encoded_prompt)] = -1
-        # 0より大きい(ge)かどうかの真偽値でmaskを作成
-        example_mask = encoded_tensor_example.ge(0)
+        labels[: len(prompt)] = -1
         label_mask = labels.ge(0)
 
-        if torch.all(label_mask == 0):  # len(output) == 0
+        if torch.all(label_mask == 0):  # 予測部分がない
             random_index: int = np.random.randint(0, len(self.indexes))
             self.__getitem__(random_index)
 
-        # ~example_mask -> paddingの部分を 0 で埋める
-        encoded_tensor_example[~example_mask] = 0
         # ~label_mask -> prompt の部分を ignore_index で埋める
         labels[~label_mask] = IGNORE_INDEX
+        # mask out pad token
+        attention_mask = (tensor_example != eos_token_id).float()
 
         return {
-            "input_ids": encoded_tensor_example,
+            "input_ids": tensor_example,
             "labels": labels,
-            "attention_mask": example_mask.float(),
+            "attention_mask": attention_mask,
         }
 
 
