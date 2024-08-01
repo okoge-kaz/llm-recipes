@@ -191,7 +191,12 @@ def main() -> None:
                 update_iter_info()
 
         elif args.direct_preference_optimization:
-            pass
+            from llama_recipes.utils.dpo_loss import DPOLoss
+
+            dpo_loss_fn = DPOLoss(
+                beta=args.dpo_beta,
+                label_smoothing=args.dpo_label_smoothing,
+            )
         else:
             raise ValueError("unknown training mode")
 
@@ -242,6 +247,7 @@ def main() -> None:
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         local_rank=get_local_rank(),
         rank=get_rank(),
+        dpo_loss_fn=dpo_loss_fn,
     )
 
 

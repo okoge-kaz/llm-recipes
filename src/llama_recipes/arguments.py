@@ -270,6 +270,8 @@ def _add_training_args(parser: argparse.ArgumentParser) -> argparse.ArgumentPars
     group.add_argument("--instruction-tuning", action="store_true")
     # DPO
     group.add_argument("--direct-preference-optimization", action="store_true")
+    group.add_argument('--dpo-beta', type=float, default=0.1)
+    group.add_argument('--dpo-label-smoothing', type=float, default=0.0)
 
     return parser
 

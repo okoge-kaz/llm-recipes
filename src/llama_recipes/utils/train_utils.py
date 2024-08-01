@@ -1,6 +1,5 @@
 import os
 import time
-from contextlib import nullcontext
 
 import torch
 import torch.cuda.nccl as nccl
@@ -11,6 +10,7 @@ from torch.nn.utils import clip_grad_norm_  # type: ignore
 from llama_recipes.policies import fpSixteen, bfSixteen, bfSixteen_mixed, get_decoder_layer_wrapper
 from llama_recipes.utils.wandb_utils import log_model_info, log_wandb
 from llama_recipes.utils.checkpoint import save_checkpoint, get_latest_iteration
+from llama_recipes.utils.dpo_loss import DPOLoss
 
 from typing import Optional, Any
 import wandb
@@ -39,6 +39,7 @@ def train(
     gradient_accumulation_steps: int,
     local_rank: Optional[int] = None,
     rank: Optional[int] = None,
+    dpo_loss_fn: Optional[DPOLoss] = None,
 ) -> None:
     """
     Trains the model on the given dataloader
@@ -63,7 +64,6 @@ def train(
 
     world_size = int(os.environ["WORLD_SIZE"])
     local_rank = local_rank if local_rank is not None else 0
-    autocast = torch.cuda.amp.autocast if args.fp16 else nullcontext  # type: ignore
 
     # set model info
     if rank == 0 and args.wandb_name:
@@ -100,11 +100,55 @@ def train(
 
             batch = next(train_dataloader)
 
-            for key in batch.keys():
-                batch[key] = batch[key].to(local_rank)
+            if args.direct_preference_optimization:
+                # DPO( Direct Preference Optimization)
+                from llama_recipes.utils.dpo import concatenated_forward
 
-            with autocast():
-                loss: torch.Tensor = model(**batch).loss
+                if dpo_loss_fn is None:
+                    raise ValueError(
+                        "DPO(Direct Preference Optimization) is enabled, but dpo loss function  is None"
+                    )
+                # forward
+                (
+                    policy_chosen_log_probs,
+                    policy_rejected_log_probs,
+                    policy_chosen_logits,
+                    policy_rejected_logits,
+                ) = concatenated_forward(model=model, batch=batch, local_rank=local_rank)
+
+                policy_chosen_logits_mean = policy_chosen_logits.detach().mean()
+                policy_rejected_logits_mean = policy_rejected_logits.detach().mean()
+
+                # deleting logits here helps reduce (peak) memory usage - we only need them for metric logging
+                del policy_chosen_logits, policy_rejected_logits
+
+                with torch.no_grad():
+                    (
+                        reference_chosen_log_probs,
+                        reference_rejected_log_probs,
+                        _,
+                        _,
+                    ) = concatenated_forward(model=model, batch=batch, local_rank=local_rank)
+
+                loss, chosen_rewards, rejected_rewards = dpo_loss_fn(
+                    policy_chosen_log_probs,
+                    policy_rejected_log_probs,
+                    reference_chosen_log_probs,
+                    reference_rejected_log_probs,
+                )
+                loss = loss.mean()
+                reward_accuracies = (chosen_rewards > rejected_rewards).float()
+            else:
+                # continual-pre-training & Instruction Tuning
+                for key in batch.keys():
+                    batch[key] = batch[key].to(local_rank)
+
+                with torch.cuda.amp.autocast(
+                    enabled=args.mixed_precision,
+                    dtype=torch.bfloat16 if args.use_bf16 else torch.float16
+                ):
+                    loss: torch.Tensor = model(**batch).loss
+
             loss = loss / gradient_accumulation_steps
 
             if args.fp16:
@@ -152,6 +196,21 @@ def train(
                     world_size=world_size,
                     iteration_start_time=iteration_start_time,
                 )
+                if args.direct_preference_optimization:
+                    wandb.log(
+                        {
+                            "rewards/chosen": chosen_rewards.mean().cpu(),
+                            "rewards/rejected": rejected_rewards.mean().cpu(),
+                            "rewards/accuracies": reward_accuracies.mean().cpu(),
+                            "rewards/margins": (chosen_rewards - rejected_rewards).mean().cpu(),  # type: ignore
+                            "log_probs/rejected": policy_rejected_log_probs.detach().mean().cpu(),
+                            "log_probs/chosen": policy_chosen_log_probs.detach().mean().cpu(),
+                            "logits/rejected": policy_rejected_logits_mean.cpu(),
+                            "logits/chosen": policy_chosen_logits_mean.cpu(),
+                        },
+                        step=iteration,
+                    )
+
             total_loss = 0.0
             iteration_start_time = time.perf_counter()
 
