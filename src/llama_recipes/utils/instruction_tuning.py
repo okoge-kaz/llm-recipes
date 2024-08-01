@@ -86,7 +86,7 @@ class InstructDataset(Dataset):
         tensor_example: torch.Tensor = torch.tensor(example, dtype=torch.int64)
 
         if len(example) > self.max_words:
-            print(f"\n\nWARNING: example={example}\n\n")
+            print(f"\n\nWARNING: example={self.tokenizer.decode(example)}\n\n")
 
         padding_length: int = self.max_words - len(example)
         eos_token_id: int = self.tokenizer.encode("<|end_of_text|>", add_special_tokens=False)[0]

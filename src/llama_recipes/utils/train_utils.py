@@ -145,7 +145,7 @@ def train(
 
                 with torch.cuda.amp.autocast(
                     enabled=args.mixed_precision,
-                    dtype=torch.bfloat16 if args.use_bf16 else torch.float16
+                    dtype=torch.bfloat16 if args.bf16 else torch.float16
                 ):
                     loss: torch.Tensor = model(**batch).loss
 

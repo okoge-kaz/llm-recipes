@@ -144,6 +144,7 @@ def main() -> None:
     if not args.instruction_tuning and not args.direct_preference_optimization:
         args.continual_pretraining = True
 
+    dpo_loss_fn = None
     if args.continual_pretraining:
         from llama_recipes.datasets.pretrain_dataset import build_train_valid_test_datasets
         from megatron_lm.megatron.data.data_samplers import build_pretraining_data_loader
