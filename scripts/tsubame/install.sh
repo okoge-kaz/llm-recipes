@@ -4,23 +4,30 @@
 #$ -l h_rt=1:00:00
 #$ -p -5
 
-# priotiry: -5: normal, -4: high, -3: highest
-
 # Load modules
-module load cuda/12.1.0
-module load nccl/2.20.5
-module load openmpi/5.0.2-gcc
+module use /gs/fs/tga-NII-LLM/modules/modulefiles
+
+module load ylab/cuda/12.1
+module load ylab/cudnn/8.9.7
+module load ylab/nccl/cuda-12.2/2.20.5
+module load ylab/hpcx/2.17.1
 module load ninja/1.11.1
-module load ~/modulefiles/cudnn/9.0.0
 
 # Set environment variables
 source .env/bin/activate
 
+# pip version up
 pip install --upgrade pip
 
-# Install packages
+# pip install requirements
 pip install -r requirements.txt
 
-# flash attn
+# distirbuted training requirements
+pip install mpi4py
+
+# huggingface requirements
+pip install huggingface_hub
+
+# install flash-atten
 pip install ninja packaging wheel
 pip install flash-attn --no-build-isolation

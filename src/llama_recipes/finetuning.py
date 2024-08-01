@@ -80,6 +80,7 @@ def main() -> None:
             "name": args.wandb_name,
             "config": vars(args),
         }
+        wandb.require("core")
         wandb.init(**wandb_setting)
 
     if torch_distributed.is_initialized():
