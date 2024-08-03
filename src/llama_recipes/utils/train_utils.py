@@ -163,8 +163,13 @@ def train(
             # gradient clipping
             if args.grad_clip_norm > 0:
                 clip_grad_norm_(model.parameters(), args.grad_clip_norm)
-            real_batch_size: int = batch["input_ids"].shape[0]
-            real_seq_len: int = batch["input_ids"].shape[1]
+
+            if args.direct_preference_optimization:
+                real_batch_size: int = batch["chosen_input_ids"].shape[0]
+                real_seq_len: int = batch["chosen_input_ids"].shape[1]
+            else:
+                real_batch_size: int = batch["input_ids"].shape[0]
+                real_seq_len: int = batch["input_ids"].shape[1]
 
         # gradient accumulation end
         iteration += 1

@@ -320,6 +320,12 @@ def _add_instruction_tuning_args(parser: argparse.ArgumentParser) -> argparse.Ar
         "--instruction-valid-data-path", type=str, default=None,
     )
     group.add_argument(
+        "--dpo-train-data-path", type=str, default=None,
+    )
+    group.add_argument(
+        "--dpo-valid-data-path", type=str, default=None,
+    )
+    group.add_argument(
         "--epoch", type=int, default=2,
     )
     group.add_argument(
