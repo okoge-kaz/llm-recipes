@@ -1,3 +1,4 @@
+import copy
 import os
 import sys
 
@@ -101,6 +102,10 @@ def main() -> None:
     model = get_model(
         model_name=args.base_model, use_cache=use_cache
     )
+    if args.direct_preference_optimization:
+        reference_model = copy.deepcopy(model)
+        for param in reference_model.parameters():
+            param.requires_grad = False
 
     if args.load:
         load_model_state_dict(model, args.load)  # type: ignore
@@ -114,6 +119,13 @@ def main() -> None:
             model.to(torch.bfloat16)  # type: ignore
         elif args.fp16:
             model.to(torch.float16)  # type: ignore
+
+    if args.direct_preference_optimization:
+        with preserve_fp32_buffers(reference_model):
+            if args.bf16:
+                reference_model.to(torch.bfloat16)  # type: ignore
+            elif args.fp16:
+                reference_model.to(torch.float16)  # type: ignore
 
     if args.use_freeze_layers:
         print_rank_0("NOTE: freeze transformer layers")
@@ -141,6 +153,23 @@ def main() -> None:
     )
     if args.fsdp_activation_checkpointing:
         apply_fsdp_checkpointing(model=model, model_name=args.base_model)
+
+    if args.direct_preference_optimization:
+        reference_model = FSDP(
+            reference_model,  # type: ignore
+            auto_wrap_policy=wrapping_policy,
+            cpu_offload=CPUOffload(offload_params=True) if args.fsdp_cpu_offload else None,
+            mixed_precision=mixed_precision_policy,
+            sharding_strategy=get_sharding_strategy(),
+            device_id=torch.cuda.current_device(),
+            limit_all_gathers=True,
+            sync_module_states=args.low_cpu_fsdp,
+            param_init_fn=lambda module: module.to_empty(  # type: ignore
+                device=torch.cuda.current_device(), recurse=False,  # type: ignore
+            )
+            if args.low_cpu_fsdp and rank != 0
+            else None,
+        )
 
     if not args.instruction_tuning and not args.direct_preference_optimization:
         args.continual_pretraining = True
@@ -269,6 +298,7 @@ def main() -> None:
         local_rank=get_local_rank(),
         rank=get_rank(),
         dpo_loss_fn=dpo_loss_fn,
+        reference_model=reference_model if args.direct_preference_optimization else None,
     )
 
 

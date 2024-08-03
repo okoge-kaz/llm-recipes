@@ -71,8 +71,6 @@ def concatenated_forward(
     len_chosen = concatenated_input_ids.shape[0] // 2
 
     all_logits = model(concatenated_input_ids).logits
-    print(f"DEBUG: all_logits={all_logits}, type(all_logits)={type(all_logits)}")
-    print(f"DEBUG: concatenated_labels={concatenated_labels}, type(concatenated_labels)={type(concatenated_labels)}")
 
     all_log_probs = get_batch_log_probs(
         all_logits, concatenated_labels  # type: ignore

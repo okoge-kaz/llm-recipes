@@ -40,6 +40,7 @@ def train(
     local_rank: Optional[int] = None,
     rank: Optional[int] = None,
     dpo_loss_fn: Optional[DPOLoss] = None,
+    reference_model: Optional[torch.nn.Module] = None,
 ) -> None:
     """
     Trains the model on the given dataloader
@@ -108,6 +109,11 @@ def train(
                     raise ValueError(
                         "DPO(Direct Preference Optimization) is enabled, but dpo loss function  is None"
                     )
+                if reference_model is None:
+                    raise ValueError(
+                        "DPO(Direct Preference Optimization) is enabled, but reference model is None"
+                    )
+
                 # forward
                 (
                     policy_chosen_log_probs,
@@ -128,7 +134,7 @@ def train(
                         reference_rejected_log_probs,
                         _,
                         _,
-                    ) = concatenated_forward(model=model, batch=batch, local_rank=local_rank)
+                    ) = concatenated_forward(model=reference_model, batch=batch, local_rank=local_rank)
 
                 loss, chosen_rewards, rejected_rewards = dpo_loss_fn(
                     policy_chosen_log_probs,
