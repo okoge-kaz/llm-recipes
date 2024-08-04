@@ -1,7 +1,7 @@
 #!/bin/sh
 #$ -cwd
-#$ -l node_f=2
-#$ -l h_rt=1:00:00:00
+#$ -l node_f=4
+#$ -l h_rt=0:20:00:00
 #$ -o outputs/Llama-3-8b-instruct/$JOB_ID.log
 #$ -e outputs/Llama-3-8b-instruct/$JOB_ID.log
 #$ -p -5
@@ -61,8 +61,8 @@ mkdir -p ${CHECKPOINT_SAVE_DIR}
 # dataset
 DATASET_DIR=/gs/bs/tga-NII-LLM/datasets/raw/instruct/synthetic/general/Synthetic-JP-Conversations-Magpie-Nemotron-4-10k
 
-TRAIN_DATA_PATH=${DATASET_DIR}/Synthetic-JP-Conversations-Magpie-Nemotron-4-10k.jsonl
-VALID_DATA_PATH=${DATASET_DIR}/Synthetic-JP-Conversations-Magpie-Nemotron-4-10k.jsonl
+TRAIN_DATA_PATH=${DATASET_DIR}/converted.jsonl
+VALID_DATA_PATH=${DATASET_DIR}/converted.jsonl
 
 # job name
 JOB_NAME="Llama-3-8B-instruct-v0.2-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}-WD=${WEIGHT_DECAY}-GC=${GRAD_CLIP}"
