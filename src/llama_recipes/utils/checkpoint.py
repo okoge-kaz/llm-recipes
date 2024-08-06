@@ -1,6 +1,7 @@
 import time
 import torch
 import torch.distributed as torch_distributed
+from torch.utils.data.distributed import DistributedSampler
 from torch.distributed.fsdp import (  # noqa: F401
     FullyShardedDataParallel as FSDP,  # type: ignore
     StateDictType,  # type: ignore
@@ -9,6 +10,7 @@ from torch.distributed.fsdp import (  # noqa: F401
 from torch.distributed.fsdp.api import FullOptimStateDictConfig
 from pathlib import Path
 import os
+import gc
 
 from megatron_lm.megatron.global_vars import get_args, get_sampler
 
@@ -42,6 +44,8 @@ def save_model_state_dict(model: FSDP, path: str) -> None:
         print(f"Saving model state dict to {path}")
         torch.save(state_dict, path)
         print(f"Saved model state dict to {path}")
+        del state_dict
+        gc.collect()
 
 
 def save_optimizer_state_dict(model: FSDP, optimizer: torch.optim.Optimizer, path: str) -> None:
@@ -50,6 +54,8 @@ def save_optimizer_state_dict(model: FSDP, optimizer: torch.optim.Optimizer, pat
         print(f"Saving optimizer state dict to {path}")
         torch.save(state_dict, path)
         print(f"Saved optimizer state dict to {path}")
+        del state_dict
+        gc.collect()
 
 
 def save_scheduler_state_dict(scheduler: torch.optim.lr_scheduler.LRScheduler, path: str) -> None:
@@ -59,10 +65,10 @@ def save_scheduler_state_dict(scheduler: torch.optim.lr_scheduler.LRScheduler, p
         print(f"Saved scheduler state dict to {path}")
 
 
-def save_sampler_state_dict(sampler: torch.utils.data.distributed.DistributedSampler, path: str) -> None:
+def save_sampler_state_dict(sampler: DistributedSampler, path: str) -> None:
     if torch_distributed.get_rank() == 0:
         print(f"Saving sampler indices to {path}")
-        torch.save(sampler.state_dict(), path)
+        torch.save(sampler.state_dict(), path)  # type: ignore
         print(f"Saved sampler indices to {path}")
 
 
@@ -197,14 +203,14 @@ def load_scheduler_state_dict(scheduler: torch.optim.lr_scheduler.LRScheduler, p
     del state_dict
 
 
-def load_sampler_state_dict(sampler: torch.utils.data.distributed.DistributedSampler, path: str) -> None:
+def load_sampler_state_dict(sampler: DistributedSampler, path: str) -> None:
     latest_iteration: int = get_latest_iteration(path)
     if latest_iteration == 0:
         return
 
     latest_checkpoint_path: str = get_checkpoint_name(path, latest_iteration)
     state_dict = torch.load(f"{latest_checkpoint_path}/sampler.pt", map_location="cpu")
-    sampler.load_state_dict(state_dict)
+    sampler.load_state_dict(state_dict)  # type: ignore
     del state_dict
 
 

@@ -1,16 +1,19 @@
 #!/bin/bash
 #$ -l rt_AF=2
-#$ -l h_rt=1:00:00:00
+#$ -l h_rt=0:01:00:00
 #$ -j y
-#$ -o outputs/instruction/swallow-13b/
+#$ -o outputs/instruction/Llama-3-8B/
 #$ -cwd
 
 # module load
 source /etc/profile.d/modules.sh
-module load cuda/11.8/11.8.0
-module load cudnn/8.9/8.9.2
-module load nccl/2.16/2.16.2-1
+module use /bb/llm/gaf51275/modules/modulefiles
+
+module load cuda/12.1/12.1.1
+module load cudnn/cuda-12.1/9.0.0
+module load nccl/2.20.5
 module load hpcx/2.12
+module load gcc/11.4.0
 
 # swich virtual env
 source .env/bin/activate
@@ -44,33 +47,33 @@ while read -r line; do
 done <"$SGE_JOB_HOSTLIST" >"$HOSTFILE_NAME"
 
 # training config
-SEQ_LENGTH=4096
+SEQ_LENGTH=8192
 DATA_PARALLEL_SIZE=$NUM_GPUS
 
-MICRO_BATCH_SIZE=2
-GLOBAL_BATCH_SIZE=256
+MICRO_BATCH_SIZE=1
+GLOBAL_BATCH_SIZE=128
 
 # optimizer config
-LR=2e-5
-MIN_LR=2e-6
+LR=1e-5
+MIN_LR=1e-6
 WEIGHT_DECAY=0.1
 GRAD_CLIP=1
 
-# checkpoint & tokenizer
-TOKENIZER_MODEL=/bb/llm/gaf51275/llama/huggingface-checkpoint/Swallow-13b-hf/tokenizer.model
-CHECKPOINT_DIR=/bb/llm/gaf51275/llama/huggingface-checkpoint/Swallow-13b-hf
-CHECKPOINT_SAVE_DIR="/bb/llm/gaf51275/llama/checkpoints/Swallow-13b-VE-chat/dolly-oasst2-top1-imitation-2-3-lr_${LR}-minlr_${MIN_LR}-GB_${GLOBAL_BATCH_SIZE}"
+# checkpoint
+TOKENIZER_DIR=/groups/gag51395/hf-checkpoints/Meta-Llama-3-8B-Instruct
+CHECKPOINT_DIR=/groups/gag51395/hf-checkpoints/Meta-Llama-3-8B-Instruct
+CHECKPOINT_SAVE_DIR="/bb/llm/gaf51275/2024/checkpoints/Llama-3-8B-Instruct-v0.2/LR_${LR}_MINLR_${MIN_LR}_WD_${WEIGHT_DECAY}_GC_${GRAD_CLIP}"
 
 mkdir -p ${CHECKPOINT_SAVE_DIR}
 
 # dataset
-DATASET_DIR=/bb/llm/gaf51275/llama/finetuning/datasets/training/dolly-oasst2-top1-imitation-2-3
+DATASET_DIR=/groups/gag51395/datasets/instruction/2023-swallow/training/baseline
 
 TRAIN_DATA_PATH=${DATASET_DIR}/train.jsonl
-VALID_DATA_PATH=${DATASET_DIR}/val.jsonl
+VALID_DATA_PATH=${DATASET_DIR}/train.jsonl
 
 # job name
-JOB_NAME="Swallow-13b-VE-dolly-oasst2-top1-imitation-2-3-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}"
+JOB_NAME="Llama-3-8B-instruct-v0.2-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}-WD=${WEIGHT_DECAY}-GC=${GRAD_CLIP}"
 
 # run
 mpirun -np $NUM_GPUS \
@@ -78,20 +81,18 @@ mpirun -np $NUM_GPUS \
   -hostfile $HOSTFILE_NAME \
   -x MASTER_ADDR=$MASTER_ADDR \
   -x MASTER_PORT=$MASTER_PORT \
-  -bind-to none -map-by slot \
+  -bind-to none \
+  -x PATH \
+  -x LD_LIBRARY_PATH \
   -x PATH \
   python examples/finetuning.py \
   --seq-length ${SEQ_LENGTH} \
-  --sliding-window-size ${SEQ_LENGTH} \
   --micro-batch-size ${MICRO_BATCH_SIZE} \
   --global-batch-size ${GLOBAL_BATCH_SIZE} \
-  --hf-transformer-model-dir ${CHECKPOINT_DIR} \
-  --tokenizer-type Llama2Tokenizer \
-  --tokenizer-model ${TOKENIZER_MODEL} \
+  --hf-transformer-model-dir ${TOKENIZER_DIR} \
   --instruction-train-data-path ${TRAIN_DATA_PATH} \
   --instruction-valid-data-path ${VALID_DATA_PATH} \
-  --epoch 2 \
-  --train-iters 500000 \
+  --epoch 1 \
   --lr ${LR} \
   --min-lr ${MIN_LR} \
   --lr-decay-style cosine \
@@ -100,10 +101,10 @@ mpirun -np $NUM_GPUS \
   --optimizer adam \
   --adam-beta1 0.9 \
   --adam-beta2 0.95 \
-  --adam-eps 1e-6 \
+  --adam-eps 1e-8 \
   --save-interval 500 \
-  --eval-interval 100 \
-  --eval-iters 20 \
+  --eval-interval 500 \
+  --eval-iters 10 \
   --bf16 \
   --mixed-precision \
   --base-model ${CHECKPOINT_DIR} \
@@ -116,6 +117,6 @@ mpirun -np $NUM_GPUS \
   --instruction-tuning \
   --save-sampler-state \
   --use-mpi \
-  --wandb-entity "prj-jalm" \
-  --wandb-project "Llama-2-13b-instruct" \
+  --wandb-entity "okoge" \
+  --wandb-project "llm-recipes" \
   --wandb-name "${JOB_NAME}"

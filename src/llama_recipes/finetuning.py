@@ -1,3 +1,4 @@
+import copy
 import os
 import sys
 
@@ -49,7 +50,8 @@ sys.path.append(f"{current_path}/llama-recipes/src/")
 def main() -> None:
     # initialize
     args = parse_args()
-    set_global_variables(args=args)
+    is_pretraining = not (args.instruction_tuning or args.direct_preference_optimization)
+    set_global_variables(args=args, build_tokenizer=is_pretraining)
 
     # Set the seeds for reproducibility
     set_seed(seed=args.seed)
@@ -79,6 +81,7 @@ def main() -> None:
             "name": args.wandb_name,
             "config": vars(args),
         }
+        wandb.require("core")
         wandb.init(**wandb_setting)
 
     if torch_distributed.is_initialized():
@@ -99,6 +102,10 @@ def main() -> None:
     model = get_model(
         model_name=args.base_model, use_cache=use_cache
     )
+    if args.direct_preference_optimization:
+        reference_model = copy.deepcopy(model)
+        for param in reference_model.parameters():
+            param.requires_grad = False
 
     if args.load:
         load_model_state_dict(model, args.load)  # type: ignore
@@ -112,6 +119,13 @@ def main() -> None:
             model.to(torch.bfloat16)  # type: ignore
         elif args.fp16:
             model.to(torch.float16)  # type: ignore
+
+    if args.direct_preference_optimization:
+        with preserve_fp32_buffers(reference_model):
+            if args.bf16:
+                reference_model.to(torch.bfloat16)  # type: ignore
+            elif args.fp16:
+                reference_model.to(torch.float16)  # type: ignore
 
     if args.use_freeze_layers:
         print_rank_0("NOTE: freeze transformer layers")
@@ -140,9 +154,27 @@ def main() -> None:
     if args.fsdp_activation_checkpointing:
         apply_fsdp_checkpointing(model=model, model_name=args.base_model)
 
+    if args.direct_preference_optimization:
+        reference_model = FSDP(
+            reference_model,  # type: ignore
+            auto_wrap_policy=wrapping_policy,
+            cpu_offload=CPUOffload(offload_params=True) if args.fsdp_cpu_offload else None,
+            mixed_precision=mixed_precision_policy,
+            sharding_strategy=get_sharding_strategy(),
+            device_id=torch.cuda.current_device(),
+            limit_all_gathers=True,
+            sync_module_states=args.low_cpu_fsdp,
+            param_init_fn=lambda module: module.to_empty(  # type: ignore
+                device=torch.cuda.current_device(), recurse=False,  # type: ignore
+            )
+            if args.low_cpu_fsdp and rank != 0
+            else None,
+        )
+
     if not args.instruction_tuning and not args.direct_preference_optimization:
         args.continual_pretraining = True
 
+    dpo_loss_fn = None
     if args.continual_pretraining:
         from llama_recipes.datasets.pretrain_dataset import build_train_valid_test_datasets
         from megatron_lm.megatron.data.data_samplers import build_pretraining_data_loader
@@ -165,6 +197,7 @@ def main() -> None:
     else:
         from transformers import AutoTokenizer
         from llama_recipes.utils.instruction_tuning import get_instruction_tuning_dataloader
+        from llama_recipes.utils.dpo_dataset import get_dpo_dataloader
 
         hf_tokenizer = AutoTokenizer.from_pretrained(
             pretrained_model_name_or_path=args.hf_transformer_model_dir
@@ -190,7 +223,30 @@ def main() -> None:
                 update_iter_info()
 
         elif args.direct_preference_optimization:
-            pass
+            from llama_recipes.utils.dpo_loss import DPOLoss
+
+            dpo_loss_fn = DPOLoss(
+                beta=args.dpo_beta,
+                label_smoothing=args.dpo_label_smoothing,
+            )
+
+            train_dataloader = get_dpo_dataloader(
+                tokenizer=hf_tokenizer,  # type: ignore
+                data_path=args.dpo_train_data_path,
+                train=True
+            )
+            validation_dataloader = get_dpo_dataloader(
+                tokenizer=hf_tokenizer,  # type: ignore
+                data_path=args.dpo_valid_data_path
+            )
+
+            args.train_iters = args.dpo_dataset_size // args.global_batch_size * args.epoch
+            args.lr_decay_iters = args.train_iters
+            args.lr_warmup_iters = args.lr_decay_iters // 10
+            args.save_sampler_state = True
+            if rank == 0:
+                from llama_recipes.utils.wandb_utils import update_iter_info
+                update_iter_info()
         else:
             raise ValueError("unknown training mode")
 
@@ -241,6 +297,8 @@ def main() -> None:
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         local_rank=get_local_rank(),
         rank=get_rank(),
+        dpo_loss_fn=dpo_loss_fn,
+        reference_model=reference_model if args.direct_preference_optimization else None,
     )
 
 

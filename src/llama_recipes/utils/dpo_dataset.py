@@ -13,7 +13,7 @@ from llama_recipes.utils.distributed import print_rank_0
 from megatron_lm.megatron.global_vars import get_args, set_sampler
 
 
-class InstructDataset(Dataset):
+class DPODataset(Dataset):
     def __init__(
         self,
         tokenizer: PreTrainedTokenizer,
@@ -22,7 +22,7 @@ class InstructDataset(Dataset):
         args = get_args()
 
         self.data_path: str = data_path
-        self.max_words: int = args.seq_length
+        self.max_tokens: int = args.seq_length
         self.tokenizer = tokenizer
 
         # system prompt
@@ -72,52 +72,71 @@ class InstructDataset(Dataset):
         ]
         # chat template
         prompt = self.tokenizer.apply_chat_template(
-            conversation=SYSTEM_PROMPT + conversations["input"],  # type: ignore
+            conversation=SYSTEM_PROMPT + conversations["conversations"],  # type: ignore
             add_generation_prompt=True,
             tokenize=True,
         )
 
-        example = self.tokenizer.apply_chat_template(
-            conversation=SYSTEM_PROMPT + conversations["input"] + [  # type: ignore
-                {"role": "assistant", "content": conversations["output"]}
+        chosen = self.tokenizer.apply_chat_template(
+            conversation=SYSTEM_PROMPT + conversations["conversations"] + [  # type: ignore
+                {"role": "assistant", "content": conversations["chosen"]}
             ],
             tokenize=True,
         )
-        tensor_example: torch.Tensor = torch.tensor(example, dtype=torch.int64)
+        rejected = self.tokenizer.apply_chat_template(
+            conversation=SYSTEM_PROMPT + conversations["conversations"] + [  # type: ignore
+                {"role": "assistant", "content": conversations["rejected"]}
+            ],
+            tokenize=True,
+        )
+        chosen_input_ids: torch.Tensor = torch.tensor(chosen, dtype=torch.int64)
+        rejected_input_ids: torch.Tensor = torch.tensor(rejected, dtype=torch.int64)
 
-        if len(example) > self.max_words:
-            print(f"\n\nWARNING: example={self.tokenizer.decode(example)}\n\n")
+        if len(chosen) > self.max_tokens or len(rejected) > self.max_tokens:
+            print(f"\n\nWARNING: chosen={self.tokenizer.decode(chosen)}\n\n")
+            print(f"\n\nWARNING: rejected={self.tokenizer.decode(rejected)}\n\n")
 
-        padding_length: int = self.max_words - len(example)
         eos_token_id: int = self.tokenizer.encode("<|end_of_text|>", add_special_tokens=False)[0]
         pad_token_id = eos_token_id
-        if padding_length > 0:
-            pad_tensor = torch.full(
-                (padding_length,), pad_token_id, dtype=torch.int64
-            )
-            tensor_example = torch.cat((tensor_example, pad_tensor))
-        elif padding_length < 0:
-            tensor_example = tensor_example[: self.max_words]
 
-        labels = copy.deepcopy(tensor_example)
+        def pad_tensor(tensor: torch.Tensor) -> torch.Tensor:
+            padding_length: int = self.max_tokens - len(tensor)
+            if padding_length > 0:
+                pad_tensor = torch.full(
+                    (padding_length,), pad_token_id, dtype=torch.int64
+                )
+                tensor = torch.cat((tensor, pad_tensor))
+            elif padding_length < 0:
+                tensor = tensor[: self.max_tokens]
+
+            return tensor
+
+        chosen_input_ids = pad_tensor(tensor=chosen_input_ids)
+        rejected_input_ids = pad_tensor(tensor=rejected_input_ids)
+
+        chosen_labels = copy.deepcopy(chosen_input_ids)
+        rejected_labels = copy.deepcopy(rejected_input_ids)
         # promptの長さ分だけ -1 で埋める -> 損失関数で無視するようになる
-        labels[: len(prompt)] = -1
-        label_mask = labels.ge(0)
+        chosen_labels[: len(prompt)] = -1
+        rejected_labels[: len(prompt)] = -1
+        chosen_label_mask = chosen_labels.ge(0)
+        rejected_label_mask = rejected_labels.ge(0)
 
-        if torch.all(label_mask == 0):  # 予測部分がない
+        if torch.all(chosen_label_mask == 0) or torch.all(rejected_label_mask == 0):
             random_index: int = np.random.randint(0, len(self.indexes))
             self.__getitem__(random_index)
 
         # ~label_mask -> prompt の部分を ignore_index で埋める
-        labels[~label_mask] = IGNORE_INDEX
-        labels[labels == pad_token_id] = IGNORE_INDEX
-        # mask out pad token
-        attention_mask = (tensor_example != pad_token_id).float()
+        chosen_labels[~chosen_label_mask] = IGNORE_INDEX
+        rejected_labels[~rejected_label_mask] = IGNORE_INDEX
+        chosen_labels[chosen_labels == pad_token_id] = IGNORE_INDEX
+        rejected_labels[rejected_labels == pad_token_id] = IGNORE_INDEX
 
         return {
-            "input_ids": tensor_example,
-            "labels": labels,
-            "attention_mask": attention_mask,
+            "chosen_input_ids": chosen_input_ids,
+            "rejected_input_ids": rejected_input_ids,
+            "chosen_labels": chosen_labels,
+            "rejected_labels": rejected_labels,
         }
 
 
@@ -131,7 +150,7 @@ def worker_init_fn(worker_id: int) -> None:
     random.seed(worker_seed)
 
 
-def get_instruction_tuning_dataloader(
+def get_dpo_dataloader(
     tokenizer: PreTrainedTokenizer,
     data_path: str,
     train: bool = False,
@@ -141,17 +160,17 @@ def get_instruction_tuning_dataloader(
 
     args = get_args()
 
-    instruction_dataset = InstructDataset(
+    dpo_dataset = DPODataset(
         tokenizer=tokenizer,
         data_path=data_path,
     )
 
     if train:
-        args.instruction_dataset_size = len(instruction_dataset)
-        print_rank_0(f"Instruction dataset size: {args.instruction_dataset_size}")
+        args.dpo_dataset_size = len(dpo_dataset)
+        print_rank_0(f"DPO dataset size: {args.dpo_dataset_size}")
 
     train_sampler = CustomDistributedSampler(
-        dataset=instruction_dataset,
+        dataset=dpo_dataset,
         rank=torch_distributed.get_rank(),
         num_replicas=torch_distributed.get_world_size(),
         shuffle=True,
@@ -164,7 +183,7 @@ def get_instruction_tuning_dataloader(
     set_sampler(sampler=train_sampler)
 
     return DataLoader(
-        instruction_dataset,
+        dpo_dataset,
         batch_size=args.micro_batch_size,
         sampler=train_sampler,
         num_workers=args.num_workers,

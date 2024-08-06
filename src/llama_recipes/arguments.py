@@ -20,6 +20,8 @@ def parse_args() -> argparse.Namespace:
     # validate
     if args.use_freeze_layers:
         assert args.no_save_optimizer_state is True
+    # adam epsilon is very sensitive value so don't change
+    assert args.adam_eps == 1e-8
 
     return args
 
@@ -147,6 +149,13 @@ def _add_data_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         '--vocab-extra-ids', type=int, default=0,
         help='Number of additional vocabulary tokens. They are used for span masking in the T5 model'
     )
+    # instruction tuning
+    group.add_argument(
+        '--system-prompt-role', type=str, default="system"
+    )
+    group.add_argument(
+        '--system-prompt-content', type=str, default='あなたは誠実で優秀な日本人のアシスタントです。'
+    )
 
     return parser
 
@@ -261,6 +270,8 @@ def _add_training_args(parser: argparse.ArgumentParser) -> argparse.ArgumentPars
     group.add_argument("--instruction-tuning", action="store_true")
     # DPO
     group.add_argument("--direct-preference-optimization", action="store_true")
+    group.add_argument('--dpo-beta', type=float, default=0.1)
+    group.add_argument('--dpo-label-smoothing', type=float, default=0.0)
 
     return parser
 
@@ -307,6 +318,12 @@ def _add_instruction_tuning_args(parser: argparse.ArgumentParser) -> argparse.Ar
     )
     group.add_argument(
         "--instruction-valid-data-path", type=str, default=None,
+    )
+    group.add_argument(
+        "--dpo-train-data-path", type=str, default=None,
+    )
+    group.add_argument(
+        "--dpo-valid-data-path", type=str, default=None,
     )
     group.add_argument(
         "--epoch", type=int, default=2,
