@@ -32,6 +32,8 @@ from llama_recipes.get_models import get_model
 from llama_recipes.utils.checkpoint import (
     load_model_state_dict,
     load_optimizer_state_dict,
+    load_dist_model_state_dict,
+    load_dist_optimizer_state_dict,
     load_scheduler_state_dict,
     load_rng_state_dict,
     get_latest_iteration,
@@ -108,7 +110,10 @@ def main() -> None:
             param.requires_grad = False
 
     if args.load:
-        load_model_state_dict(model, args.load)  # type: ignore
+        if args.use_dist_ckpt:
+            load_dist_model_state_dict(model, args.load)  # type: ignore
+        else:
+            load_model_state_dict(model, args.load)  # type: ignore
 
     print_model_size(model, args.base_model, rank)  # type: ignore
 
@@ -271,7 +276,10 @@ def main() -> None:
         )
 
     if args.load:
-        load_optimizer_state_dict(model=model, optimizer=optimizer, path=args.load)  # type: ignore
+        if args.use_dist_ckpt:
+            load_dist_optimizer_state_dict(model=model, optimizer=optimizer, path=args.load)  # type: ignore
+        else:
+            load_optimizer_state_dict(model=model, optimizer=optimizer, path=args.load)  # type: ignore
 
     if args.lr_decay_style == "cosine":
         scheduler = WarmupCosineAnnealingLR(

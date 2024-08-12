@@ -1,7 +1,7 @@
 #!/bin/sh
 #$ -cwd
-#$ -l node_f=4
-#$ -l h_rt=0:20:00:00
+#$ -l node_f=2
+#$ -l h_rt=0:1:00:00
 #$ -o outputs/Llama-3-8b-instruct/$JOB_ID.log
 #$ -e outputs/Llama-3-8b-instruct/$JOB_ID.log
 #$ -p -5
@@ -54,7 +54,7 @@ GRAD_CLIP=1
 # checkpoint
 TOKENIZER_DIR=/gs/bs/tga-NII-LLM/hf-checkpoints/Meta-Llama-3-8B-Instruct
 CHECKPOINT_DIR=/gs/bs/tga-NII-LLM/swallow-hf/Llama-3-Swallow-8B-v0.1
-CHECKPOINT_SAVE_DIR="/gs/bs/tga-NII-LLM/checkpoints/Llama-3-8B-Instruct-v0.2/LR_${LR}_MINLR_${MIN_LR}_WD_${WEIGHT_DECAY}_GC_${GRAD_CLIP}"
+CHECKPOINT_SAVE_DIR="/gs/bs/tga-NII-LLM/checkpoints/Llama-3-8B-Instruct-v0.2/LR_${LR}_MINLR_${MIN_LR}_WD_${WEIGHT_DECAY}_GC_${GRAD_CLIP}-dist-ckpt"
 
 mkdir -p ${CHECKPOINT_SAVE_DIR}
 
@@ -94,7 +94,7 @@ mpirun -np $NUM_GPUS \
   --adam-beta1 0.9 \
   --adam-beta2 0.95 \
   --adam-eps 1e-8 \
-  --save-interval 500 \
+  --save-interval 10 \
   --eval-interval 500 \
   --eval-iters 10 \
   --bf16 \
@@ -108,6 +108,7 @@ mpirun -np $NUM_GPUS \
   --fsdp-activation-checkpointing \
   --instruction-tuning \
   --save-sampler-state \
+  --use-dist-ckpt \
   --use-mpi \
   --wandb-entity "prj-jalm" \
   --wandb-project "Llama-3-8B-Instruct-v0.2" \

@@ -64,6 +64,9 @@ def _add_fsdp_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     group.add_argument(
         "--no-meta-device", action="store_true"
     )
+    group.add_argument(
+        "--use-dist-ckpt", action="store_true"
+    )
 
     return parser
 
