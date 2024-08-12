@@ -214,6 +214,7 @@ def load_dist_model_state_dict(model: FSDP, path: str) -> None:
         print(f"Loading model state dict from {latest_checkpoint_path}")
 
     t0 = time.perf_counter()
+    # ref: https://github.com/pytorch/pytorch/blob/main/test/distributed/checkpoint/test_fsdp_optim_state.py
     FSDP.set_state_dict_type(
         model,
         StateDictType.SHARDED_STATE_DICT,
@@ -269,6 +270,7 @@ def load_dist_optimizer_state_dict(model: FSDP, optimizer: torch.optim.Optimizer
         print(f"Loading optimizer state dict from {latest_checkpoint_path}")
 
     t0 = time.perf_counter()
+    # ref: https://github.com/pytorch/pytorch/blob/main/test/distributed/checkpoint/test_fsdp_optim_state.py
     FSDP.set_state_dict_type(
         model,
         StateDictType.SHARDED_STATE_DICT,
