@@ -261,9 +261,6 @@ def _add_training_args(parser: argparse.ArgumentParser) -> argparse.ArgumentPars
     # model
     group.add_argument("--sliding-window-size", type=int, default=4096)
 
-    # loss spike
-    group.add_argument("--skip-batch", nargs='*', default=None)
-
     # checkpoint
     group.add_argument("--no-save-optimizer-state", action="store_true")
 

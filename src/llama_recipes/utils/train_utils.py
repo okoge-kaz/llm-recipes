@@ -8,6 +8,7 @@ from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 from torch.nn.utils import clip_grad_norm_  # type: ignore
 
 from llama_recipes.policies import fpSixteen, bfSixteen, bfSixteen_mixed, get_decoder_layer_wrapper
+from llama_recipes.utils.distributed import print_rank_0
 from llama_recipes.utils.wandb_utils import log_model_info, log_wandb
 from llama_recipes.utils.checkpoint import save_checkpoint, get_latest_iteration
 from llama_recipes.utils.dpo_loss import DPOLoss
@@ -79,19 +80,13 @@ def train(
     eval_dataloader = iter(cyclic_iter(eval_dataloader))
 
     # skip batch
-    skip_batches: list[tuple[int, int]] = []
-    consumed_iters: int = iteration
-    if args.skip_batch:
-        skip_batches = parse_skip_batch(args.skip_batch)
+    if args.instruction_tuning or args.direct_preference_optimization:
+        assert args.continual_pretraining is False
+        print_rank_0(f"Skipping {iteration} batches")
+        for _ in range(iteration):
+            next(train_dataloader)
 
     while iteration < args.train_iters:
-        # skip batch logic
-        while len(skip_batches) > 0 and skip_batches[0][0] <= consumed_iters <= skip_batches[0][1]:
-            next(train_dataloader)
-            consumed_iters += 1
-        if len(skip_batches) > 0 and skip_batches[0][1] < consumed_iters:
-            skip_batches.pop(0)
-
         iteration_start_time = time.perf_counter()
 
         model.train()
@@ -179,7 +174,6 @@ def train(
 
         # gradient accumulation end
         iteration += 1
-        consumed_iters += 1
 
         if args.fp16:
             scaler.step(optimizer)  # type: ignore (= optimizer.step())
