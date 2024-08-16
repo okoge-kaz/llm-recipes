@@ -15,7 +15,7 @@ What sets llm-recipes apart is its seamless integration with Hugging Face Transf
 | Feature                         | llm-recipes | llama-recipes | torchtune |
 |---------------------------------|-------------|---------------|-----------|
 | **SFT(Supervised Fine-Tuning)** | ✅          | ✅            | ✅        |
-| **Continual Pre-Training**  | ✅          | ✅            | ✅        |
+| **Continual Pre-Training**      | ✅          | ✅            | ✅        |
 | **DPO(Direct Preference Optimization)** | ✅          | ❌            | ❌        |
 | **Llama Models Support**        | ✅          | ✅            | ✅       |
 | **Non-Llama Models Support**    | ✅          | ❌            | ❌       |
@@ -200,12 +200,46 @@ python tools/checkpoint-convert/convert_ckpt.py \
 
 ### PyTorch distributed format to Hugging Face format
 
+You can convert the PyTorch distributed format to the Hugging Face format using the following command:
 
+```bash
+  ITERATION=1000
+  FORMATTED_ITERATION=$(printf "iter_%07d" $ITERATION)
 
+  CHECK_POINT_PATH=/path/to/fsdp/checkpoint/${FORMATTED_ITERATION}
+  OUTPUT_PATH=/path/to/converted-hf-checkpoint/${FORMATTED_ITERATION}
+
+  echo "convert FSDP ${CHECK_POINT_PATH} to ${OUTPUT_PATH}"
+
+  mkdir -p $OUTPUT_PATH
+
+  BASE_MODEL_CHECKPOINT=/path/to/hf-checkpoints/Meta-Llama-3-8B-Instruct
+
+  python tools/checkpoint-convert/convert_fsdp.py \
+  --hf-base-model-path $BASE_MODEL_CHECKPOINT \
+  --tokenizer-path $BASE_MODEL_CHECKPOINT \
+  --fsdp-checkpoint-path $CHECK_POINT_PATH \
+  --checkpoint-output-path $OUTPUT_PATH \
+  --sequence-length 8192
+```
 
 ## Inference
 
+After checkpoint conversion, you can use the Hugging Face Transformers library to load the converted checkpoint and perform inference.
+
+The following is an example of how to do inference using the converted checkpoint (huggingface format):
+
+```bash
+python tools/inference/inference.py \
+  --model-path /path/to/converted/iter_0004000 \
+  --tokenizer-path /path/to/tokenizer/path \
+  --prompt "Tokyo is the capital of"
+```
+
 ## Training Speed and Scalability
+
+We are currently working on improving the training speed and scalability of llm-recipes.
+We will update this section with more information soon.
 
 ## Projects Using llm-recipes
 
@@ -216,3 +250,4 @@ Below are some of the projects where we have directly used llm-recipes:
 
 ## Citation
 
+we are current submitting the paper to SC24 workshop, and the citation will be updated soon.
