@@ -1,31 +1,33 @@
-#!/bin/bash
-#$ -l rt_AG.small=1
-#$ -l h_rt=1:00:00
-#$ -j y
-#$ -o outputs/inference/
+#!/bin/sh
 #$ -cwd
+#$ -l node_q=1
+#$ -l h_rt=0:1:00:00
+#$ -o outputs/inference/$JOB_ID.log
+#$ -e outputs/inference/$JOB_ID.log
+#$ -p -5
 
 # module load
-source /etc/profile.d/modules.sh
-module use /bb/llm/gaf51275/modules/modulefiles
+module use /gs/fs/tga-NII-LLM/modules/modulefiles
 
-module load cuda/12.1/12.1.1
-module load cudnn/cuda-12.1/9.0.0
-module load nccl/2.20.5
-module load hpcx/2.12
-module load gcc/11.4.0
+module load ylab/cuda/12.1
+module load ylab/cudnn/8.9.7
+module load ylab/nccl/cuda-12.2/2.20.5
+module load ylab/hpcx/2.17.1
+module load ninja/1.11.1
 
 set -e
 
 # swich virtual env
 source .env/bin/activate
 
+INFERENCE_MODEL_DIR=/gs/bs/tga-NII-LLM/checkpoints/fsdp-hf/Llama-3-8B-Instruct-v0.2/LR_1e-5_MINLR_1e-6_WD_0.1_GC_1-dist-ckpt/iter_0000078
+
 python tools/inference/inference.py \
-  --model-path /bb/llm/gaf51275/llama/converted-hf-checkpoint/mistral-7B-VE/okazaki-cc/iter_0004000 \
-  --tokenizer-path /bb/llm/gaf51275/llama/converted-hf-checkpoint/mistral-7B-VE/okazaki-cc/iter_0004000 \
+  --model-path $INFERENCE_MODEL_DIR \
+  --tokenizer-path $INFERENCE_MODEL_DIR \
   --prompt "Tokyo is the capital of Japan."
 
 python tools/inference/inference.py \
-  --model-path /bb/llm/gaf51275/llama/converted-hf-checkpoint/mistral-7B-VE/okazaki-cc/iter_0004000 \
-  --tokenizer-path /bb/llm/gaf51275/llama/converted-hf-checkpoint/mistral-7B-VE/okazaki-cc/iter_0004000 \
+  --model-path $INFERENCE_MODEL_DIR \
+  --tokenizer-path $INFERENCE_MODEL_DIR \
   --prompt "東京工業大学のキャンパスは"
