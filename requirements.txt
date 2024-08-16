@@ -2,7 +2,7 @@
 torch==2.3.1+cu121
 
 # huggingface
-transformers>=4.41.1
+transformers>=4.44.0
 datasets
 accelerate
 peft
@@ -10,11 +10,10 @@ peft
 appdirs
 loralib
 scipy
-py7zr  # 圧縮解凍library
+py7zr
 bitsandbytes
-fire  # argparser
+fire
 
-# formatter & linter
 black
 flake8
 

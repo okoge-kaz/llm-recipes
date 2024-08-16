@@ -64,6 +64,9 @@ def _add_fsdp_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     group.add_argument(
         "--no-meta-device", action="store_true"
     )
+    group.add_argument(
+        "--use-dist-ckpt", action="store_true"
+    )
 
     return parser
 
@@ -257,9 +260,6 @@ def _add_training_args(parser: argparse.ArgumentParser) -> argparse.ArgumentPars
 
     # model
     group.add_argument("--sliding-window-size", type=int, default=4096)
-
-    # loss spike
-    group.add_argument("--skip-batch", nargs='*', default=None)
 
     # checkpoint
     group.add_argument("--no-save-optimizer-state", action="store_true")

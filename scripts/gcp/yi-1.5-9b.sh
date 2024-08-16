@@ -87,14 +87,14 @@ LR_DECAY_STEPS=25000
 WEIGHT_DECAY=0.1
 GRAD_CLIP=1
 # model config
-TOKENIZER_MODEL=/home/ext_kazuki_fujii_rio_gsic_titech/hf_checkpoints/Yi-1.5-9B/tokenizer.model
-CHECKPOINT_DIR=/home/ext_kazuki_fujii_rio_gsic_titech/hf_checkpoints/Yi-1.5-9B
-CHECKPOINT_SAVE_DIR=/home/ext_kazuki_fujii_rio_gsic_titech/checkpoints/Yi-1.5-9B
+TOKENIZER_MODEL=/home/kazuki/hf_checkpoints/Yi-1.5-9B/tokenizer.model
+CHECKPOINT_DIR=/home/kazuki/hf_checkpoints/Yi-1.5-9B
+CHECKPOINT_SAVE_DIR=/home/kazuki/checkpoints/Yi-1.5-9B
 
 mkdir -p ${CHECKPOINT_SAVE_DIR}
 
 # data config
-DATASET_DIR=/home/ext_kazuki_fujii_rio_gsic_titech/datasets/debug/yi-1.5
+DATASET_DIR=/home/kazuki/datasets/debug/yi-1.5
 
 DATA_PATH=""
 
@@ -132,7 +132,7 @@ mpirun -np $NUM_GPUS \
   --optimizer adam \
   --adam-beta1 0.9 \
   --adam-beta2 0.95 \
-  --adam-eps 1e-5 \
+  --adam-eps 1e-8 \
   --save-interval 500 \
   --eval-interval 100 \
   --eval-iters 10 \

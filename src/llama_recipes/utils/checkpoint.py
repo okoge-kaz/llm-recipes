@@ -7,7 +7,9 @@ from torch.distributed.fsdp import (  # noqa: F401
     StateDictType,  # type: ignore
     FullStateDictConfig,  # type:ignore : general model non-sharded, non-flattened params
 )
+import torch.distributed._shard.checkpoint as dist_cp
 from torch.distributed.fsdp.api import FullOptimStateDictConfig
+from torch.distributed.checkpoint.optimizer import load_sharded_optimizer_state_dict
 from pathlib import Path
 import os
 import gc
@@ -15,7 +17,7 @@ import gc
 from megatron_lm.megatron.global_vars import get_args, get_sampler
 
 
-def get_model_state_dict(model: FSDP) -> dict[str, torch.Tensor]:
+def get_local_model_state_dict(model: FSDP) -> dict[str, torch.Tensor]:
     with FSDP.state_dict_type(
         model,
         StateDictType.FULL_STATE_DICT,
@@ -26,7 +28,7 @@ def get_model_state_dict(model: FSDP) -> dict[str, torch.Tensor]:
     return state_dict
 
 
-def get_optimizer_state_dict(model: FSDP, optimizer: torch.optim.Optimizer) -> dict[str, torch.Tensor]:
+def get_local_optimizer_state_dict(model: FSDP, optimizer: torch.optim.Optimizer) -> dict[str, torch.Tensor]:
     with FSDP.state_dict_type(
         model,
         state_dict_type=StateDictType.FULL_STATE_DICT,
@@ -38,8 +40,34 @@ def get_optimizer_state_dict(model: FSDP, optimizer: torch.optim.Optimizer) -> d
     return state_dict
 
 
+def save_dist_model_and_optimizer_state_dict(
+    model: FSDP, optimizer: torch.optim.Optimizer, path: str
+) -> None:
+    if torch_distributed.get_rank() == 0:
+        print(f"Saving model and optimizer state dict to {path}")
+    t0 = time.perf_counter()
+
+    FSDP.set_state_dict_type(
+        model,
+        StateDictType.SHARDED_STATE_DICT,
+    )
+    optim_state_dict = FSDP.optim_state_dict(model, optimizer)
+    state_dict = {
+        "model": model.state_dict(),
+        "optimizer": optim_state_dict,
+    }
+    dist_cp.save(
+        state_dict=state_dict,
+        checkpoint_id=path,
+    )
+    torch_distributed.barrier()
+    t1 = time.perf_counter()
+    if torch_distributed.get_rank() == 0:
+        print(f"Saved model and optimizer state dict to {path}, took {t1 - t0:.2f}s")
+
+
 def save_model_state_dict(model: FSDP, path: str) -> None:
-    state_dict = get_model_state_dict(model)
+    state_dict = get_local_model_state_dict(model)
     if torch_distributed.get_rank() == 0:
         print(f"Saving model state dict to {path}")
         torch.save(state_dict, path)
@@ -49,7 +77,7 @@ def save_model_state_dict(model: FSDP, path: str) -> None:
 
 
 def save_optimizer_state_dict(model: FSDP, optimizer: torch.optim.Optimizer, path: str) -> None:
-    state_dict = get_optimizer_state_dict(model, optimizer)
+    state_dict = get_local_optimizer_state_dict(model, optimizer)
     if torch_distributed.get_rank() == 0:
         print(f"Saving optimizer state dict to {path}")
         torch.save(state_dict, path)
@@ -111,16 +139,24 @@ def save_checkpoint(
         start = time.time()
         print(f"Saving checkpoint to {checkpoint_path}")
 
-    save_model_state_dict(
-        model=model,
-        path=f"{checkpoint_path}/model.pt",
-    )
-    if not args.no_save_optimizer_state:
-        save_optimizer_state_dict(
+    if args.use_dist_ckpt:
+        save_dist_model_and_optimizer_state_dict(
             model=model,
             optimizer=optimizer,
-            path=f"{checkpoint_path}/optimizer.pt",
+            path=checkpoint_path,
         )
+    else:
+        save_model_state_dict(
+            model=model,
+            path=f"{checkpoint_path}/model.pt",
+        )
+        if not args.no_save_optimizer_state:
+            save_optimizer_state_dict(
+                model=model,
+                optimizer=optimizer,
+                path=f"{checkpoint_path}/optimizer.pt",
+            )
+
     if args.save_sampler_state:
         sampler = get_sampler()
 
@@ -165,6 +201,35 @@ def load_model_state_dict(model: torch.nn.Module, path: str) -> None:
         print(f"Loaded model state dict from {latest_checkpoint_path}/model.pt")
 
 
+def load_dist_model_state_dict(model: FSDP, path: str) -> None:
+    latest_iteration: int = get_latest_iteration(path)
+    if latest_iteration == 0:
+        if torch_distributed.get_rank() == 0:
+            print(f"No checkpoint found in {path}, skipping model loading")
+        return
+
+    latest_checkpoint_path: str = get_checkpoint_name(path, latest_iteration)
+
+    if torch_distributed.get_rank() == 0:
+        print(f"Loading model state dict from {latest_checkpoint_path}")
+
+    t0 = time.perf_counter()
+    # ref: https://github.com/pytorch/pytorch/blob/main/test/distributed/checkpoint/test_fsdp_optim_state.py
+    FSDP.set_state_dict_type(
+        model,
+        StateDictType.SHARDED_STATE_DICT,
+    )
+    state_dict = {"model": model.state_dict()}
+    dist_cp.load(
+        state_dict=state_dict,
+        checkpoint_id=latest_checkpoint_path,
+    )
+    model.load_state_dict(state_dict["model"])
+
+    if torch_distributed.get_rank() == 0:
+        print(f"Loaded model state dict from {latest_checkpoint_path}, took {time.perf_counter() - t0:.2f}s")
+
+
 def load_optimizer_state_dict(model: FSDP, optimizer: torch.optim.Optimizer, path: str) -> None:
     latest_iteration: int = get_latest_iteration(path)
     if latest_iteration == 0:
@@ -190,6 +255,42 @@ def load_optimizer_state_dict(model: FSDP, optimizer: torch.optim.Optimizer, pat
 
     if torch_distributed.get_rank() == 0:
         print(f"Loaded optimizer state dict from {latest_checkpoint_path}/optimizer.pt")
+
+
+def load_dist_optimizer_state_dict(model: FSDP, optimizer: torch.optim.Optimizer, path: str) -> None:
+    latest_iteration: int = get_latest_iteration(path)
+    if latest_iteration == 0:
+        if torch_distributed.get_rank() == 0:
+            print(f"No checkpoint found in {path}, skipping optimizer loading")
+        return
+
+    latest_checkpoint_path: str = get_checkpoint_name(path, latest_iteration)
+
+    if torch_distributed.get_rank() == 0:
+        print(f"Loading optimizer state dict from {latest_checkpoint_path}")
+
+    t0 = time.perf_counter()
+    # ref: https://github.com/pytorch/pytorch/blob/main/test/distributed/checkpoint/test_fsdp_optim_state.py
+    FSDP.set_state_dict_type(
+        model,
+        StateDictType.SHARDED_STATE_DICT,
+    )
+    state_dict = {"model": model.state_dict()}
+    dist_cp.load(
+        state_dict=state_dict,
+        checkpoint_id=latest_checkpoint_path,
+    )
+    optim_state = load_sharded_optimizer_state_dict(
+        model_state_dict=state_dict["model"],
+        optimizer_key="optimizer",
+        storage_reader=dist_cp.FileSystemReader(latest_checkpoint_path),
+        planner=dist_cp.DefaultLoadPlanner()
+    )
+    flattened_optim_state = FSDP.optim_state_dict_to_load(model, optimizer, optim_state["optimizer"])
+    optimizer.load_state_dict(flattened_optim_state)
+
+    if torch_distributed.get_rank() == 0:
+        print(f"Loaded optimizer state dict from {latest_checkpoint_path}, took {time.perf_counter() - t0:.2f}s")
 
 
 def load_scheduler_state_dict(scheduler: torch.optim.lr_scheduler.LRScheduler, path: str) -> None:
