@@ -12,6 +12,15 @@ llm-recipes is a tool designed to make the continual pre-training of Large Langu
 
 What sets llm-recipes apart is its seamless integration with Hugging Face Transformers, allowing you to continue pre-training or perform instruction tuning on Dense LLMs (non-MoE models) with minimal changes. This means there’s no need to convert checkpoints or deal with complex workflows—just focus on refining your model.
 
+| Feature                         | llm-recipes | llama-recipes | torchtune |
+|---------------------------------|-------------|---------------|-----------|
+| **SFT(Supervised Fine-Tuning)** | ✅          | ✅            | ✅        |
+| **Continual Pre-Training**  | ✅          | ✅            | ✅        |
+| **DPO(Direct Preference Optimization)** | ✅          | ❌            | ❌        |
+| **Llama Models Support**        | ✅          | ✅            | ✅       |
+| **Non-Llama Models Support**    | ✅          | ❌            | ❌       |
+| **Multi-Node Support**          | ✅          | ✅            | ❌       |
+
 # Table of Contents
 
 - [Installation](#installation)
@@ -138,7 +147,11 @@ python megatron_lm/tools/preprocess_data.py \
 
 #### 3. **Training**
 
+We support Llama-2, Llama-3, Llama-3.1, Mistral, Codestral, Phi-3, Yi-1.5, and gemma-2.
+If you want to continually pre-train or instruction tune other models, you should modify `src/llama_recipes/get_models.py` and `src/llama_recipes/get_model_decoder_layer.py`.
 
+We provide example scripts for continual pre-training for codestral-22B in `scripts/gcp/codestral-22b.sh`.
+You can modify the script to suit your needs.
 
 ### LLM DPO
 
@@ -150,7 +163,7 @@ The documentation will be updated soon.
 
 ### llm-recipes format
 
-llm-recipes creates 2 types of checkpoints: PyTorch format and PyTorch distributed format.
+llm-recipes supports 2 types of checkpoints: PyTorch format and PyTorch distributed format.
 The PyTorch format is a simple checkpoint format. The example of the PyTorch format is as follows:
 
 ```bash
@@ -165,7 +178,29 @@ __0_0.distcp  __1_0.distcp  __2_0.distcp  __3_0.distcp  __4_0.distcp  __5_0.dist
 
 ### PyTorch format to Hugging Face format
 
+You can convert the PyTorch format to the Hugging Face format using the following command:
+
+```bash
+ITERATION=1000
+FORMATTED_ITERATION=$(printf "iter_%07d" $ITERATION)
+
+CHECK_POINT_PATH=/path/to/train/checkpoint/${FORMATTED_ITERATION}/model.pt
+OUTPUT_PATH=/path/to/converted/checkpoint/${FORMATTED_ITERATION}
+
+mkdir -p $OUTPUT_PATH
+
+BASE_MODEL_CHECKPOINT=/path/to/huggingface-checkpoint/Llama-2-7b-hf
+
+python tools/checkpoint-convert/convert_ckpt.py \
+  --model $BASE_MODEL_CHECKPOINT \
+  --ckpt $CHECK_POINT_PATH \
+  --out $OUTPUT_PATH \
+  --sequence-length 4096
+```
+
 ### PyTorch distributed format to Hugging Face format
+
+
 
 
 ## Inference
