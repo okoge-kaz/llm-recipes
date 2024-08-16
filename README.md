@@ -251,3 +251,14 @@ Below are some of the projects where we have directly used llm-recipes:
 ## Citation
 
 we are current submitting the paper to SC24 workshop, and the citation will be updated soon.
+
+```bibtex
+@software{Fujii_llm-recipes_2024,
+author = {Kazuki Fujii and Taishi Nakamura and Rio Yokota},
+month = may,
+title = {{llm-recipes}},
+url = {https://github.com/okoge-kaz/llm-recipes},
+version = {1.0.0},
+year = {2024}
+}
+```
