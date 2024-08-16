@@ -247,6 +247,7 @@ Below are some of the projects where we have directly used llm-recipes:
 
 - [Continual Pre-Training for Cross-Lingual LLM Adaptation: Enhancing Japanese Language Capabilities](https://arxiv.org/abs/2404.17790)
 - [Building a Large Japanese Web Corpus for Large Language Models](https://arxiv.org/abs/2404.17733)
+- [Turing(company)](https://tur.ing/en)'s [GENIAC](https://www.meti.go.jp/english/policy/mono_info_service/geniac/index.html) project (SFT training)
 
 ## Citation
 
