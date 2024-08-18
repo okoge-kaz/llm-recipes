@@ -18,8 +18,8 @@ What sets llm-recipes apart is its seamless integration with Hugging Face Transf
 | **Continual Pre-Training**      | ✅          | ✅            | ✅        |
 | **DPO(Direct Preference Optimization)** | ✅          | ❌            | ✅        |
 | **Llama Models Support**        | ✅          | ✅            | ✅       |
-| **Non-Llama Models Support**    | ✅          | ❌            | ❌       |
-| **Multi-Node Support**          | ✅          | ✅            | ✅       |
+| **Non-Llama Models Support**    | ✅          | ❌            | ✅       |
+| **Multi-Node Support**          | ✅          | ✅            | ❌       |
 
 # Table of Contents
 
