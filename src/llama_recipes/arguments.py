@@ -10,6 +10,7 @@ def parse_args() -> argparse.Namespace:
     parser = _add_training_args(parser=parser)
     parser = _add_regularization_args(parser=parser)
     parser = _add_instruction_tuning_args(parser=parser)
+    parser = _add_torch_profiler_args(parser=parser)
 
     args = parser.parse_args()
 
@@ -338,5 +339,37 @@ def _add_instruction_tuning_args(parser: argparse.ArgumentParser) -> argparse.Ar
     group.add_argument(
         "--save-sampler-state", action="store_true",
     )
+
+    return parser
+
+
+def _add_torch_profiler_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    group = parser.add_argument_group(title='torch profiler')
+
+    group.add_argument('--torch-profile', action='store_true', help='Enable torch profiler')
+    group.add_argument(
+        '--torch-profile-ranks', nargs='+', type=int, default=[0], help='Global ranks to profile'
+    )
+    group.add_argument('--torch-profile-wait', type=int, default=0, help='Steps to wait before profiling')
+    group.add_argument('--torch-profile-warmup', type=int, default=1, help='Warmup steps before profiling')
+    group.add_argument('--torch-profile-active', type=int, default=1, help='Steps to profile')
+    group.add_argument(
+        '--torch-profile-repeat', type=int, default=1, help='Repeat profiling this number of times'
+    )
+    group.add_argument(
+        '--torch-profile-skip-first', type=int, default=1,
+        help='Number of iterations to skip before profiling'
+    )
+    group.add_argument('--torch-profile-record-shapes', action='store_true',
+                       help='Save information about operator’s input shapes')
+    group.add_argument('--torch-profile-profile-memory', action='store_true',
+                       help='Track tensor memory allocation/deallocation')
+    group.add_argument('--torch-profile-with-stack', action='store_true',
+                       help='Record source information for the ops')
+    group.add_argument(
+        '--torch-profile-with-flops', action='store_true', help='Use formula to estimate the FLOPs'
+    )
+    group.add_argument('--torch-profile-with-modules', action='store_true', help='Record module hierarchy ')
+    group.add_argument('--tensorboard-dir', type=str, default=None)
 
     return parser
