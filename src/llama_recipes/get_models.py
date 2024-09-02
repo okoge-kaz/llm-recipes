@@ -34,33 +34,15 @@ def get_model(
         init_time = time.perf_counter()
 
     if "Llama" in model_name or "Swallow" in model_name:
-        if args.low_cpu_fsdp:
-            """
-            for FSDP, we can save cpu memory by loading pretrained model on rank0 only.
-            this avoids cpu oom when loading large models like llama 70B, in which case
-            model alone would consume 2+TB cpu mem (70 * 4 * 8). This will add some communications
-            overhead.
-            """
-            if is_rank_0():
-                model = LlamaForCausalLM.from_pretrained(
-                    model_name,
-                    load_in_8bit=True if args.quantization else None,
-                    device_map="auto" if args.quantization else None,
-                    use_cache=use_cache,
-                )
-            else:
-                llama_config = LlamaConfig.from_pretrained(model_name)
-                llama_config.use_cache = use_cache
-                with torch.device("meta"):
-                    model = LlamaForCausalLM(llama_config)
-
-        else:
-            model = LlamaForCausalLM.from_pretrained(
-                model_name,
-                load_in_8bit=True if args.quantization else None,
-                device_map="auto" if args.quantization else None,
-                use_cache=use_cache,
-            )
+        model = LlamaForCausalLM.from_pretrained(
+            model_name,
+            load_in_8bit=True if args.quantization else None,
+            device_map="auto" if args.quantization else None,
+            use_cache=use_cache,
+            max_position_embeddings=args.seq_length,
+            attn_implementation="flash_attention_2",
+            torch_dtype=torch.bfloat16 if args.bf16 else torch.float16,
+        )
 
     elif "Mistral" in model_name or "mistral" in model_name or "Codestral" in model_name:
         # If using torch.device("meta"), FSDP training hang
