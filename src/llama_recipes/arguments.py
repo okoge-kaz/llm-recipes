@@ -67,6 +67,10 @@ def _add_fsdp_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     group.add_argument(
         "--use-dist-ckpt", action="store_true"
     )
+    group.add_argument(
+        '--distributed-timeout-minutes', type=int, default=10,
+        help='Timeout minutes for torch.distributed.'
+    )
 
     return parser
 

@@ -69,7 +69,10 @@ def main() -> None:
     args.gradient_accumulation_steps = args.global_batch_size // (args.micro_batch_size * world_size)
     assert args.gradient_accumulation_steps >= 1
 
-    torch_distributed.init_process_group(backend="nccl", world_size=world_size, rank=rank)
+    timeout = timedelta(minutes=args.distributed_timeout_minutes)
+    torch_distributed.init_process_group(
+        backend="nccl", world_size=world_size, rank=rank, timeout=timeout,
+    )
 
     # wandb setting
     if args.wandb_name is not None and is_rank_0():
