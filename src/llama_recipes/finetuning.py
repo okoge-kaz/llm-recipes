@@ -1,6 +1,7 @@
 import copy
 import os
 import sys
+from datetime import timedelta
 
 import torch
 import torch.distributed as torch_distributed
@@ -258,25 +259,13 @@ def main() -> None:
         else:
             raise ValueError("unknown training mode")
 
-    if args.bf16 and args.optimizer == "anyprecision":
-        optimizer = AnyPrecisionAdamW(
-            model.parameters(),  # type: ignore
-            lr=args.lr,
-            betas=(args.adam_beta1, args.adam_beta2),
-            eps=args.adam_eps,
-            momentum_dtype=torch.bfloat16,
-            variance_dtype=torch.bfloat16,
-            use_kahan_summation=False,
-            weight_decay=args.weight_decay,
-        )
-    else:
-        optimizer = optim.AdamW(
-            model.parameters(),  # type: ignore
-            lr=args.lr,
-            betas=(args.adam_beta1, args.adam_beta2),
-            eps=args.adam_eps,
-            weight_decay=args.weight_decay,
-        )
+    optimizer = optim.AdamW(
+        model.parameters(),  # type: ignore
+        lr=args.lr,
+        betas=(args.adam_beta1, args.adam_beta2),
+        eps=args.adam_eps,
+        weight_decay=args.weight_decay,
+    )
 
     if args.load:
         if args.use_dist_ckpt:

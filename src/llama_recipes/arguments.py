@@ -208,7 +208,7 @@ def _add_training_args(parser: argparse.ArgumentParser) -> argparse.ArgumentPars
     # optimizer
     group.add_argument(
         '--optimizer', type=str, default='adam',
-        choices=['adam', 'anyprecision'],
+        choices=['adam'],
         help='Optimizer function'
     )
     group.add_argument(
