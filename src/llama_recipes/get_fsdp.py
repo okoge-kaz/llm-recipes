@@ -12,6 +12,9 @@ def get_sharding_strategy() -> ShardingStrategy:
     elif args.sharding_strategy == "NO_SHARD":
         return ShardingStrategy.NO_SHARD
     elif args.sharding_strategy == "HYBRID_SHARD":
+        # TODO: https://pytorch.org/tutorials/recipes/distributed_device_mesh.html#how-to-use-devicemesh-with-hsdp
+        # support device mesh
+        # ref: https://github.com/meta-llama/llama-recipes/blob/778e31e35cfbe385a31b3a94b794e3f75e276d1a/src/llama_recipes/finetuning.py#L160
         return ShardingStrategy.HYBRID_SHARD
     elif args.sharding_strategy == "_HYBRID_SHARD_ZERO2":
         return ShardingStrategy._HYBRID_SHARD_ZERO2

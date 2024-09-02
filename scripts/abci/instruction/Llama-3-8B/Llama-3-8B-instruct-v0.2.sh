@@ -1,6 +1,6 @@
 #!/bin/bash
-#$ -l rt_AF=2
-#$ -l h_rt=0:01:00:00
+#$ -l rt_AF=1
+#$ -l h_rt=0:08:00:00
 #$ -j y
 #$ -o outputs/instruction/Llama-3-8B/
 #$ -cwd
@@ -82,7 +82,7 @@ mpirun -np $NUM_GPUS \
   -x MASTER_ADDR=$MASTER_ADDR \
   -x MASTER_PORT=$MASTER_PORT \
   -bind-to none \
-  -x PATH \
+  -x NCCL_IB_TIMEOUT=22 \
   -x LD_LIBRARY_PATH \
   -x PATH \
   python examples/finetuning.py \
@@ -102,7 +102,7 @@ mpirun -np $NUM_GPUS \
   --adam-beta1 0.9 \
   --adam-beta2 0.95 \
   --adam-eps 1e-8 \
-  --save-interval 500 \
+  --save-interval 10 \
   --eval-interval 500 \
   --eval-iters 10 \
   --bf16 \

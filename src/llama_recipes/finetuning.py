@@ -145,6 +145,9 @@ def main() -> None:
         model_name=args.base_model,
     )
 
+    from torch.distributed._tensor.device_mesh import init_device_mesh  # type: ignore
+    device_mesh = init_device_mesh(device_type="cuda", mesh_shape=(world_size, ))
+
     model = FSDP(
         model,  # type: ignore
         auto_wrap_policy=wrapping_policy,
@@ -159,8 +162,12 @@ def main() -> None:
         )
         if args.low_cpu_fsdp and rank != 0
         else None,
+        device_mesh=device_mesh,
     )
     if args.fsdp_activation_checkpointing:
+        # ref: https://github.com/meta-llama/llama-recipes/blob/778e31e35cfbe385a31b3a94b794e3f75e276d1a/src/llama_recipes/finetuning.py#L193-L195
+        # model.enable_input_require_grads()
+        # model.gradient_checkpointing_enable()
         apply_fsdp_checkpointing(model=model, model_name=args.base_model)
 
     if args.direct_preference_optimization:

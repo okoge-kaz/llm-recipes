@@ -360,12 +360,18 @@ def _add_torch_profiler_args(parser: argparse.ArgumentParser) -> argparse.Argume
         '--torch-profile-skip-first', type=int, default=1,
         help='Number of iterations to skip before profiling'
     )
-    group.add_argument('--torch-profile-record-shapes', action='store_true',
-                       help='Save information about operator’s input shapes')
-    group.add_argument('--torch-profile-profile-memory', action='store_true',
-                       help='Track tensor memory allocation/deallocation')
-    group.add_argument('--torch-profile-with-stack', action='store_true',
-                       help='Record source information for the ops')
+    group.add_argument(
+        '--torch-profile-record-shapes', action='store_true',
+        help='Save information about operator’s input shapes'
+    )
+    group.add_argument(
+        '--torch-profile-profile-memory', action='store_true',
+        help='Track tensor memory allocation/deallocation'
+    )
+    group.add_argument(
+        '--torch-profile-with-stack', action='store_true',
+        help='Record source information for the ops'
+    )
     group.add_argument(
         '--torch-profile-with-flops', action='store_true', help='Use formula to estimate the FLOPs'
     )
