@@ -83,7 +83,7 @@ def train(
     if args.instruction_tuning or args.direct_preference_optimization:
         assert args.continual_pretraining is False
         print_rank_0(f"Skipping {iteration} batches")
-        for _ in range(iteration):
+        for _ in range(iteration * gradient_accumulation_steps):
             next(train_dataloader)
 
     while iteration < args.train_iters:
