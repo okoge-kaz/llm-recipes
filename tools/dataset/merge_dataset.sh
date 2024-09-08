@@ -1,17 +1,28 @@
 #!/bin/bash
 
-INPUT_DIR=/bb/llm/gaf51275/llama/finetuning/datasets/formatted
-OUTPUT_DIR=/bb/llm/gaf51275/llama/finetuning/datasets/training/imitation_2_oasst2_top1
+INPUT_DIR=/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-33k-ja
+OUTPUT_DIR=/bb/llm/gaf51275/datasets/raw/instruct/training/exp1-1
 
 mkdir -p $OUTPUT_DIR
 
-cat $INPUT_DIR/oasst1-21k-ja-mixtral-imitation_2.jsonl $INPUT_DIR/oasst2-top1-en.jsonl > $OUTPUT_DIR/merged.jsonl
+FILES=(
+  "/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-33k-ja/lm_filtered_split_1.jsonl"
+  "/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-33k-ja/lm_filtered_split_2.jsonl"
+  "/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-33k-ja/lm_filtered_split_3.jsonl"
+  "/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-33k-ja/lm_filtered_split_4.jsonl"
+  "/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-top1-en-chat-sft/data/lm_scored.jsonl"
+)
 
-echo "Merged dataset is saved at $OUTPUT_DIR/merged.jsonl"
+MERGED_FILE=$OUTPUT_DIR/merged.jsonl
 
-# swich virtual env
-source .env/bin/activate
+for FILE in "${FILES[@]}"; do
+  cat $FILE >> $MERGED_FILE
+done
 
-python tools/dataset/shuffle_and_split.py \
-  --input $OUTPUT_DIR/merged.jsonl \
-  --output $OUTPUT_DIR
+# fileter
+python tools/dataset/fileter.py \
+  --input_file $MERGED_FILE \
+  --output_file $OUTPUT_DIR/train.jsonl \
+  --threshold 0
+
+rm $MERGED_FILE
