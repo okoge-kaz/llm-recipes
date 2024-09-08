@@ -64,26 +64,34 @@ class InstructDataset(Dataset):
                 print(f"index={index}, offset={offset}, line={line}, error={e}")
                 exit(1)
 
-        SYSTEM_PROMPT: list[dict[str, str]] = [
-            {
-                "role": self.system_prompt_role,
-                "content": self.system_prompt_content,
-            }
-        ]
-        # chat template
-        prompt = self.tokenizer.apply_chat_template(
-            conversation=SYSTEM_PROMPT + conversations["input"],  # type: ignore
-            add_generation_prompt=True,
-            tokenize=True,
-        )
+        if 'role' in conversations and conversations["role"] == "next_token_prediction":
+            prompt = self.tokenizer.bos_token
+            example = self.tokenizer.encode(
+                conversations["content"],  # type: ignore
+                add_special_tokens=False
+            )
+            tensor_example = torch.tensor(example, dtype=torch.int64)
+        else:
+            SYSTEM_PROMPT: list[dict[str, str]] = [
+                {
+                    "role": self.system_prompt_role,
+                    "content": self.system_prompt_content,
+                }
+            ]
+            # chat template
+            prompt = self.tokenizer.apply_chat_template(
+                conversation=SYSTEM_PROMPT + conversations["input"],  # type: ignore
+                add_generation_prompt=True,
+                tokenize=True,
+            )
 
-        example = self.tokenizer.apply_chat_template(
-            conversation=SYSTEM_PROMPT + conversations["input"] + [  # type: ignore
-                {"role": "assistant", "content": conversations["output"]}
-            ],
-            tokenize=True,
-        )
-        tensor_example: torch.Tensor = torch.tensor(example, dtype=torch.int64)
+            example = self.tokenizer.apply_chat_template(
+                conversation=SYSTEM_PROMPT + conversations["input"] + [  # type: ignore
+                    {"role": "assistant", "content": conversations["output"]}
+                ],
+                tokenize=True,
+            )
+            tensor_example: torch.Tensor = torch.tensor(example, dtype=torch.int64)
 
         if len(example) > self.max_words:
             print(f"\n\nWARNING: example={self.tokenizer.decode(example)}\n\n")
