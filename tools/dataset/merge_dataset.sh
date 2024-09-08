@@ -1,7 +1,7 @@
 #!/bin/bash
 
 INPUT_DIR=/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-33k-ja
-OUTPUT_DIR=/bb/llm/gaf51275/datasets/raw/instruct/training/exp1-1
+OUTPUT_DIR=/bb/llm/gaf51275/datasets/raw/instruct/training/exp1-3
 
 mkdir -p $OUTPUT_DIR
 
@@ -23,6 +23,10 @@ done
 python tools/dataset/fileter.py \
   --input_file $MERGED_FILE \
   --output_file $OUTPUT_DIR/train.jsonl \
-  --threshold 0
+  --threshold 4
 
 rm $MERGED_FILE
+
+echo "Done"
+
+wc -l $OUTPUT_DIR/train.jsonl
