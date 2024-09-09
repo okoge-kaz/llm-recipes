@@ -3,8 +3,8 @@
 set -e
 
 INCLUDE_REDACTED=true
-FILTERD_SCORE=7
-NEXT_TOKEN_PERCENT=0.25
+FILTERD_SCORE=4
+NEXT_TOKEN_PERCENT=0.5
 
 OUTPUT_DIR=/bb/llm/gaf51275/datasets/raw/instruct/training/exp2-filtered-$FILTERD_SCORE-next_token-$NEXT_TOKEN_PERCENT
 
@@ -48,7 +48,7 @@ fi
 cat $LMSYS_FILE >> $OUTPUT_DIR/train.jsonl
 
 INSTRUCTION_SAMPLES=$(wc -l $OUTPUT_DIR/train.jsonl | awk '{print $1}')
-NEXT_TOKEN_SAMPLES=$(echo "$INSTRUCTION_SAMPLES * $NEXT_TOKEN_PERCENT / 1" | bc)
+NEXT_TOKEN_SAMPLES=$(echo "($INSTRUCTION_SAMPLES / (1 - $NEXT_TOKEN_PERCENT)) * $NEXT_TOKEN_PERCENT / 1" | bc)
 
 python tools/dataset/extract_jsonl.py \
   --input-path /bb/llm/gaf51275/datasets/raw/instruct/next-token/next-token-prediction_500k/format/merged.jsonl \
