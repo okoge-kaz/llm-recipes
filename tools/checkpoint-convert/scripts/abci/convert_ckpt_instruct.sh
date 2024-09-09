@@ -16,6 +16,7 @@ module load hpcx/2.12
 module load gcc/11.4.0
 
 set -e
+export HF_HOME="/groups/gag51395/.cache/huggigface"
 
 # swich virtual env
 source .env/bin/activate
@@ -51,3 +52,36 @@ python tools/checkpoint-convert/convert_ckpt.py \
   --pytorch-model-checkpoint-path $CHECK_POINT_PATH \
   --out $OUTPUT_PATH \
   --sequence-length 8192
+
+# upload
+upload_checkpoint() {
+  local upload_dir=$1
+  local repo_name=$2
+  local max_retries=5
+  local retry_count=0
+
+  while [ $retry_count -lt $max_retries ]; do
+    if python scripts/abci/upload/upload.py \
+        --ckpt-path "$upload_dir" \
+        --repo-name "$repo_name"; then
+        echo "Successfully uploaded $repo_name"
+        return 0
+    else
+        echo "Upload failed for $repo_name. Retrying..."
+        ((retry_count++))
+        sleep 5
+    fi
+  done
+
+  echo "Failed to upload $repo_name after $max_retries attempts"
+  return 1
+}
+
+EXP_NAME=$(echo $EXTRACTED_PATH | sed 's/\//-/g')
+HF_REPO_NAME="tokyotech-llm/Llama-3.1-8B-Instruct-${EXP_NAME}-${FORMATTED_ITERATION}"
+
+echo "upload ${OUTPUT_PATH} to ${HF_REPO_NAME}"
+
+if ! upload_checkpoint "$OUTPUT_PATH" "$HF_REPO_NAME"; then
+  echo "Skipping to next checkpoint after repeated failures for $HF_REPO_NAME"
+fi
