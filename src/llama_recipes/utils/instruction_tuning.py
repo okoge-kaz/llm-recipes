@@ -22,7 +22,7 @@ class InstructDataset(Dataset):
         args = get_args()
 
         self.data_path: str = data_path
-        self.max_words: int = args.seq_length
+        self.max_tokens: int = args.seq_length
         self.tokenizer = tokenizer
 
         # system prompt
@@ -93,10 +93,10 @@ class InstructDataset(Dataset):
             )
             tensor_example: torch.Tensor = torch.tensor(example, dtype=torch.int64)
 
-        if len(example) > self.max_words:
+        if len(example) > self.max_tokens:
             print(f"\n\nWARNING: example={self.tokenizer.decode(example)}\n\n")
 
-        padding_length: int = self.max_words - len(example)
+        padding_length: int = self.max_tokens - len(example)
         eos_token_id: int = self.tokenizer.encode("<|end_of_text|>", add_special_tokens=False)[0]
         pad_token_id = eos_token_id
         if padding_length > 0:
@@ -105,7 +105,7 @@ class InstructDataset(Dataset):
             )
             tensor_example = torch.cat((tensor_example, pad_tensor))
         elif padding_length < 0:
-            tensor_example = tensor_example[: self.max_words]
+            tensor_example = tensor_example[: self.max_tokens]
 
         labels = copy.deepcopy(tensor_example)
         # promptの長さ分だけ -1 で埋める -> 損失関数で無視するようになる

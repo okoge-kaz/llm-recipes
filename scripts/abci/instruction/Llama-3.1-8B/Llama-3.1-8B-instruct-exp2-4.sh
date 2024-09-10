@@ -103,7 +103,7 @@ mpirun -np $NUM_GPUS \
   --adam-beta2 0.95 \
   --adam-eps 1e-8 \
   --save-interval 500 \
-  --eval-interval 500 \
+  --eval-interval 500000 \
   --eval-iters 10 \
   --bf16 \
   --mixed-precision \
