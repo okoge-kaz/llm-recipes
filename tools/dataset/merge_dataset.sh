@@ -3,8 +3,8 @@
 set -e
 
 INCLUDE_REDACTED=true
-FILTERD_SCORE=4
-NEXT_TOKEN_PERCENT=0.5
+FILTERD_SCORE=7
+NEXT_TOKEN_PERCENT=0.25
 
 OUTPUT_DIR=/bb/llm/gaf51275/datasets/raw/instruct/training/exp2-filtered-$FILTERD_SCORE-next_token-$NEXT_TOKEN_PERCENT
 
@@ -19,7 +19,7 @@ FILES=(
   "/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-33k-ja/lm_filtered_split_2.jsonl"
   "/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-33k-ja/lm_filtered_split_3.jsonl"
   "/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-33k-ja/lm_filtered_split_4.jsonl"
-  "/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-top1-en-chat-sft/data/lm_scored.jsonl"
+  "/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-top1-en-chat-sft/data/train.jsonl"
 )
 
 MERGED_FILE=$OUTPUT_DIR/merged.jsonl
