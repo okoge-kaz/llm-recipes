@@ -68,7 +68,7 @@ class InstructDataset(Dataset):
             prompt = self.tokenizer.bos_token
             example = self.tokenizer.encode(
                 conversations["content"],  # type: ignore
-                add_special_tokens=False
+                add_special_tokens=True  # <bos>text + <pad>(=<eos>)
             )
             tensor_example = torch.tensor(example, dtype=torch.int64)
         else:
