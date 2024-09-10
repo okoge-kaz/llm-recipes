@@ -20,6 +20,7 @@ def process_sample(sample: dict[str, Any]) -> dict[str, Any] | None:
         "output": {"role": "assistant", "content": assistant_message["content"]},
         "conversation": sample,
         "redacted": "NAME_" in user_message["content"] or "NAME_" in assistant_message["content"],
+        "text": "user: " + user_message["content"] + "\n\nassistant: " + assistant_message["content"]
     }
 
     return result
