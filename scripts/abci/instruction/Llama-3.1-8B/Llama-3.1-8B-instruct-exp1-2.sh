@@ -1,5 +1,5 @@
 #!/bin/bash
-#$ -l rt_AF=1
+#$ -l rt_AF=8
 #$ -l h_rt=1:00:00:00
 #$ -j y
 #$ -o outputs/instruction/Llama-3.1-8B/
@@ -102,7 +102,7 @@ mpirun -np $NUM_GPUS \
   --adam-beta1 0.9 \
   --adam-beta2 0.95 \
   --adam-eps 1e-8 \
-  --save-interval 500 \
+  --save-interval 50000 \
   --eval-interval 500 \
   --eval-iters 10 \
   --bf16 \

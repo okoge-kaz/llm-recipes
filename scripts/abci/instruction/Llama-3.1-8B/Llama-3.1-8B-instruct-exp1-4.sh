@@ -1,5 +1,5 @@
 #!/bin/bash
-#$ -l rt_AF=1
+#$ -l rt_AF=8
 #$ -l h_rt=1:00:00:00
 #$ -j y
 #$ -o outputs/instruction/Llama-3.1-8B/
@@ -54,8 +54,8 @@ MICRO_BATCH_SIZE=1
 GLOBAL_BATCH_SIZE=256
 
 # optimizer config
-LR=2e-6
-MIN_LR=2e-7
+LR=1e-5
+MIN_LR=1e-6
 WEIGHT_DECAY=0.1
 GRAD_CLIP=1
 
