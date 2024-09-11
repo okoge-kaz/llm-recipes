@@ -64,12 +64,15 @@ class InstructDataset(Dataset):
                 print(f"index={index}, offset={offset}, line={line}, error={e}")
                 exit(1)
 
+        eod_token_id: int = self.tokenizer.encode("<|end_of_text|>", add_special_tokens=False)[0]
+
         if 'role' in conversations and conversations["role"] == "next_token_prediction":
-            prompt = self.tokenizer.bos_token
+            prompt = [self.tokenizer.bos_token_id]
             example = self.tokenizer.encode(
                 conversations["content"],  # type: ignore
-                add_special_tokens=True  # <bos>text + <pad>(=<eos>)
+                add_special_tokens=True  # <bos>text<eos> + <pad>
             )
+            example += [eod_token_id]
             tensor_example = torch.tensor(example, dtype=torch.int64)
         else:
             SYSTEM_PROMPT: list[dict[str, str]] = [
@@ -81,24 +84,25 @@ class InstructDataset(Dataset):
             # chat template
             prompt = self.tokenizer.apply_chat_template(
                 conversation=SYSTEM_PROMPT + conversations["input"],  # type: ignore
-                add_generation_prompt=True,
                 tokenize=True,
             )
 
             example = self.tokenizer.apply_chat_template(
                 conversation=SYSTEM_PROMPT + conversations["input"] + [  # type: ignore
-                    {"role": "assistant", "content": conversations["output"]}
+                    conversations["output"]
                 ],
                 tokenize=True,
             )
             tensor_example: torch.Tensor = torch.tensor(example, dtype=torch.int64)
 
+        # print(f"prompt: {self.tokenizer.decode(prompt, skip_special_tokens=False)}\n\nexample: {self.tokenizer.decode(example, skip_special_tokens=False)}", flush=True)
+
         if len(example) > self.max_tokens:
             print(f"\n\nWARNING: example={self.tokenizer.decode(example)}\n\n")
 
         padding_length: int = self.max_tokens - len(example)
-        eos_token_id: int = self.tokenizer.encode("<|end_of_text|>", add_special_tokens=False)[0]
-        pad_token_id = eos_token_id
+        pad_token_id: int = self.tokenizer.pad_token_id  # type: ignore
+        assert pad_token_id is not None
         if padding_length > 0:
             pad_tensor = torch.full(
                 (padding_length,), pad_token_id, dtype=torch.int64
