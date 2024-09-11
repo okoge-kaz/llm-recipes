@@ -339,6 +339,7 @@ def _add_instruction_tuning_args(parser: argparse.ArgumentParser) -> argparse.Ar
     group.add_argument(
         "--save-sampler-state", action="store_true",
     )
+    group.add_argument("--instruct-debug", action="store_true")
 
     return parser
 
