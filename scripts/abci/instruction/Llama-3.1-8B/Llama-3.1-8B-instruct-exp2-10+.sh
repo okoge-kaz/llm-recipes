@@ -67,7 +67,7 @@ CHECKPOINT_SAVE_DIR="/bb/llm/gaf51275/2024/checkpoints/Llama-3.1-8B-Instruct/exp
 mkdir -p ${CHECKPOINT_SAVE_DIR}
 
 # dataset
-DATASET_DIR=/bb/llm/gaf51275/datasets/raw/instruct/training/exp2-filtered-7-next_token-0-redacted-no-oasst-en-lmsys
+DATASET_DIR=/bb/llm/gaf51275/datasets/raw/instruct/training/exp2-filtered-7-next_token-0.25-redacted-no-oasst-en-lmsys
 
 TRAIN_DATA_PATH=${DATASET_DIR}/train.jsonl
 VALID_DATA_PATH=${DATASET_DIR}/train.jsonl
