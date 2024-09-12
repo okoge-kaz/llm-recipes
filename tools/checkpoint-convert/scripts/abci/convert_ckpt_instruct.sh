@@ -1,5 +1,5 @@
 #!/bin/bash
-#$ -l rt_F=1
+#$ -l rt_AF=1
 #$ -l h_rt=1:00:00
 #$ -j y
 #$ -o outputs/convert/ckpt/
@@ -21,7 +21,7 @@ export HF_HOME="/groups/gag51395/.cache/huggigface"
 # swich virtual env
 source .env/bin/activate
 
-CHECKPOINT_DIR=/bb/llm/gaf51275/2024/checkpoints/Llama-3.1-8B-Instruct/exp1-1/LR_1e-5_MINLR_1e-6_WD_0.1_GC_1
+CHECKPOINT_DIR=/bb/llm/gaf51275/2024/checkpoints/Llama-3.1-8B-Instruct/exp2-1/LR_2.5e-5_MINLR_2.5e-6_WD_0.1_GC_1
 LATEST_ITERATION=$(cat ${CHECKPOINT_DIR}/latest_iteration.txt)
 
 echo "LATEST_ITERATION=${LATEST_ITERATION}"
