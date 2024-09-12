@@ -4,8 +4,9 @@ set -e
 
 INCLUDE_REDACTED=false
 FILTERD_SCORE=7
-NEXT_TOKEN_PERCENT=0.5
-USE_OPEN_ASSISTANT=false
+NEXT_TOKEN_PERCENT=0.25
+USE_OPEN_ASSISTANT=true
+USE_ONLY_ENGLISH_OPEN_ASSISTANT=true
 
 OUTPUT_DIR=/bb/llm/gaf51275/datasets/raw/instruct/training/exp2-filtered-$FILTERD_SCORE-next_token-$NEXT_TOKEN_PERCENT
 
@@ -15,18 +16,26 @@ fi
 
 if ! $USE_OPEN_ASSISTANT; then
   OUTPUT_DIR=$OUTPUT_DIR-no-oasst
+elif $USE_ONLY_ENGLISH_OPEN_ASSISTANT; then
+  OUTPUT_DIR=$OUTPUT_DIR-en-oasst
 fi
 
 mkdir -p $OUTPUT_DIR
 
 if $USE_OPEN_ASSISTANT; then
-  FILES=(
-    "/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-33k-ja/lm_filtered_split_1.jsonl"
-    "/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-33k-ja/lm_filtered_split_2.jsonl"
-    "/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-33k-ja/lm_filtered_split_3.jsonl"
-    "/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-33k-ja/lm_filtered_split_4.jsonl"
-    "/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-top1-en-chat-sft/data/train.jsonl"
-  )
+  if $USE_ONLY_ENGLISH_OPEN_ASSISTANT; then
+    FILES=(
+      "/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-top1-en-chat-sft/data/train.jsonl"
+    )
+  else
+    FILES=(
+      "/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-33k-ja/lm_filtered_split_1.jsonl"
+      "/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-33k-ja/lm_filtered_split_2.jsonl"
+      "/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-33k-ja/lm_filtered_split_3.jsonl"
+      "/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-33k-ja/lm_filtered_split_4.jsonl"
+      "/bb/llm/gaf51275/datasets/raw/instruct/general/oasst2-top1-en-chat-sft/data/train.jsonl"
+    )
+  fi
 
   MERGED_FILE=$OUTPUT_DIR/merged.jsonl
 
