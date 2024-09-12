@@ -2,11 +2,12 @@
 
 set -e
 
-INCLUDE_REDACTED=false
+INCLUDE_REDACTED=true
 FILTERD_SCORE=7
 NEXT_TOKEN_PERCENT=0.25
-USE_OPEN_ASSISTANT=true
-USE_ONLY_ENGLISH_OPEN_ASSISTANT=true
+USE_OPEN_ASSISTANT=false
+USE_ONLY_ENGLISH_OPEN_ASSISTANT=false
+USE_ENGLISH_LMSYS=true
 
 OUTPUT_DIR=/bb/llm/gaf51275/datasets/raw/instruct/training/exp2-filtered-$FILTERD_SCORE-next_token-$NEXT_TOKEN_PERCENT
 
@@ -18,6 +19,10 @@ if ! $USE_OPEN_ASSISTANT; then
   OUTPUT_DIR=$OUTPUT_DIR-no-oasst
 elif $USE_ONLY_ENGLISH_OPEN_ASSISTANT; then
   OUTPUT_DIR=$OUTPUT_DIR-en-oasst
+fi
+
+if $USE_ENGLISH_LMSYS; then
+  OUTPUT_DIR=$OUTPUT_DIR-en-lmsys
 fi
 
 mkdir -p $OUTPUT_DIR
@@ -37,7 +42,7 @@ if $USE_OPEN_ASSISTANT; then
     )
   fi
 
-  MERGED_FILE=$OUTPUT_DIR/merged.jsonl
+  MERGED_FILE=$OUTPUT_DIR/merged_oasst.jsonl
 
   for FILE in "${FILES[@]}"; do
     cat $FILE >> $MERGED_FILE
@@ -59,13 +64,21 @@ else
   echo "Skipped Open Assistant data processing."
 fi
 
+# 日本語のLMSYSデータを常に使用
 if $INCLUDE_REDACTED; then
-  LMSYS_FILE=/bb/llm/gaf51275/datasets/raw/instruct/lmsys-chat-1m/sft/lmsys-chat-1m-train.jsonl
+  JA_LMSYS_FILE=/bb/llm/gaf51275/datasets/raw/instruct/lmsys-chat-1m/sft/lmsys-chat-1m-train.jsonl
 else
-  LMSYS_FILE=/bb/llm/gaf51275/datasets/raw/instruct/lmsys-chat-1m/sft/lmsys-chat-1m-train-no-redacted.jsonl
+  JA_LMSYS_FILE=/bb/llm/gaf51275/datasets/raw/instruct/lmsys-chat-1m/sft/lmsys-chat-1m-train-no-redacted.jsonl
 fi
 
-cat $LMSYS_FILE >> $OUTPUT_DIR/train.jsonl
+cat $JA_LMSYS_FILE >> $OUTPUT_DIR/train.jsonl
+
+# 英語のLMSYSデータを追加でオプションとして使用
+if $USE_ENGLISH_LMSYS; then
+  EN_LMSYS_FILE=/bb/llm/gaf51275/datasets/raw/instruct/lmsys-chat-1m/sft/lmsys-chat-1m-train-en.jsonl
+  cat $EN_LMSYS_FILE >> $OUTPUT_DIR/train.jsonl
+  echo "Added English LMSYS data"
+fi
 
 INSTRUCTION_SAMPLES=$(wc -l $OUTPUT_DIR/train.jsonl | awk '{print $1}')
 NEXT_TOKEN_SAMPLES=$(echo "($INSTRUCTION_SAMPLES / (1 - $NEXT_TOKEN_PERCENT)) * $NEXT_TOKEN_PERCENT / 1" | bc)
