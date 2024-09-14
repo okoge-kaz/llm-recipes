@@ -54,8 +54,8 @@ MICRO_BATCH_SIZE=1
 GLOBAL_BATCH_SIZE=256
 
 # optimizer config
-LR=1e-5
-MIN_LR=1e-6
+LR=2.5e-5
+MIN_LR=2.5e-6
 WEIGHT_DECAY=0.1
 GRAD_CLIP=1
 
@@ -67,7 +67,7 @@ CHECKPOINT_SAVE_DIR="/bb/llm/gaf51275/2024/checkpoints/Llama-3.1-8B-Instruct/exp
 mkdir -p ${CHECKPOINT_SAVE_DIR}
 
 # dataset
-DATASET_DIR=/bb/llm/gaf51275/datasets/raw/instruct/training/exp2-filtered-7-next_token-0.5-redacted
+DATASET_DIR=/bb/llm/gaf51275/datasets/raw/instruct/training/exp2-filtered-0-next_token-0.5-redacted
 
 TRAIN_DATA_PATH=${DATASET_DIR}/train.jsonl
 VALID_DATA_PATH=${DATASET_DIR}/train.jsonl
