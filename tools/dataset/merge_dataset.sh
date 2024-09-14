@@ -2,9 +2,9 @@
 
 set -e
 
-INCLUDE_REDACTED=true
-FILTERD_SCORE=7
-NEXT_TOKEN_PERCENT=0.25
+INCLUDE_REDACTED=false
+FILTERD_SCORE=0
+NEXT_TOKEN_PERCENT=0
 USE_OPEN_ASSISTANT=false
 USE_ONLY_ENGLISH_OPEN_ASSISTANT=false
 USE_ENGLISH_LMSYS=true
@@ -68,14 +68,18 @@ fi
 if $INCLUDE_REDACTED; then
   JA_LMSYS_FILE=/bb/llm/gaf51275/datasets/raw/instruct/lmsys-chat-1m/sft/lmsys-chat-1m-train.jsonl
 else
-  JA_LMSYS_FILE=/bb/llm/gaf51275/datasets/raw/instruct/lmsys-chat-1m/sft/lmsys-chat-1m-train-no-redacted.jsonl
+  JA_LMSYS_FILE=/bb/llm/gaf51275/datasets/raw/instruct/lmsys-chat-1m/sft/lmsys-chat-1m-train-ja-no-redacted.jsonl
 fi
 
 cat $JA_LMSYS_FILE >> $OUTPUT_DIR/train.jsonl
 
 # 英語のLMSYSデータを追加でオプションとして使用
 if $USE_ENGLISH_LMSYS; then
-  EN_LMSYS_FILE=/bb/llm/gaf51275/datasets/raw/instruct/lmsys-chat-1m/sft/lmsys-chat-1m-train-en.jsonl
+  if $INCLUDE_REDACTED; then
+    EN_LMSYS_FILE=/bb/llm/gaf51275/datasets/raw/instruct/lmsys-chat-1m/sft/lmsys-chat-1m-train-en.jsonl
+  else
+    EN_LMSYS_FILE=/bb/llm/gaf51275/datasets/raw/instruct/lmsys-chat-1m/sft/lmsys-chat-1m-train-en-no-redacted.jsonl
+  fi
   cat $EN_LMSYS_FILE >> $OUTPUT_DIR/train.jsonl
   echo "Added English LMSYS data"
 fi
