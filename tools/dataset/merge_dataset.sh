@@ -10,6 +10,7 @@ USE_OPEN_ASSISTANT=false
 USE_ONLY_ENGLISH_OPEN_ASSISTANT=false
 USE_ENGLISH_LMSYS=true
 USE_MAGPIE_ULTRA=true
+USE_GEMMA_MAGPIE=true
 CUSTOM_OUTPUT_DIR=""
 
 # Base output directory
@@ -37,6 +38,10 @@ fi
 
 if $USE_MAGPIE_ULTRA; then
   OUTPUT_DIR="${OUTPUT_DIR}-magpie-ultra"
+fi
+
+if $USE_GEMMA_MAGPIE; then
+  OUTPUT_DIR="${OUTPUT_DIR}-gemma-magpie"
 fi
 
 mkdir -p $OUTPUT_DIR
@@ -103,6 +108,13 @@ if $USE_MAGPIE_ULTRA; then
   MAGPIE_ULTRA_FILE=/bb/llm/gaf51275/datasets/raw/instruct/synthetic/magpie-ultra-v0.1/data/train.jsonl
   cat $MAGPIE_ULTRA_FILE >> $OUTPUT_DIR/train.jsonl
   echo "Added magpie-ultra data"
+fi
+
+# Add gemma-magpie dataset processing
+if $USE_GEMMA_MAGPIE; then
+  GEMMA_MAGPIE_FILE=/bb/llm/gaf51275/datasets/raw/instruct/MAGPIE/gemma2-27b-it/format.jsonl
+  cat $GEMMA_MAGPIE_FILE >> $OUTPUT_DIR/train.jsonl
+  echo "Added gemma-magpie data"
 fi
 
 INSTRUCTION_SAMPLES=$(wc -l $OUTPUT_DIR/train.jsonl | awk '{print $1}')
