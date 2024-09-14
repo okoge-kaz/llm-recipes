@@ -2,27 +2,41 @@
 
 set -e
 
+# Control variables
 INCLUDE_REDACTED=false
 FILTERD_SCORE=0
 NEXT_TOKEN_PERCENT=0
 USE_OPEN_ASSISTANT=false
 USE_ONLY_ENGLISH_OPEN_ASSISTANT=false
 USE_ENGLISH_LMSYS=true
+USE_MAGPIE_ULTRA=true
+CUSTOM_OUTPUT_DIR=""
 
-OUTPUT_DIR=/bb/llm/gaf51275/datasets/raw/instruct/training/exp2-filtered-$FILTERD_SCORE-next_token-$NEXT_TOKEN_PERCENT
+# Base output directory
+BASE_OUTPUT_DIR="/bb/llm/gaf51275/datasets/raw/instruct/training"
+
+if [ -z "$CUSTOM_OUTPUT_DIR" ]; then
+  OUTPUT_DIR="$BASE_OUTPUT_DIR/exp2-filtered-$FILTERD_SCORE-next_token-$NEXT_TOKEN_PERCENT"
+else
+  OUTPUT_DIR="$CUSTOM_OUTPUT_DIR"
+fi
 
 if $INCLUDE_REDACTED; then
-  OUTPUT_DIR=$OUTPUT_DIR-redacted
+  OUTPUT_DIR="${OUTPUT_DIR}-redacted"
 fi
 
 if ! $USE_OPEN_ASSISTANT; then
-  OUTPUT_DIR=$OUTPUT_DIR-no-oasst
+  OUTPUT_DIR="${OUTPUT_DIR}-no-oasst"
 elif $USE_ONLY_ENGLISH_OPEN_ASSISTANT; then
-  OUTPUT_DIR=$OUTPUT_DIR-en-oasst
+  OUTPUT_DIR="${OUTPUT_DIR}-en-oasst"
 fi
 
 if $USE_ENGLISH_LMSYS; then
-  OUTPUT_DIR=$OUTPUT_DIR-en-lmsys
+  OUTPUT_DIR="${OUTPUT_DIR}-en-lmsys"
+fi
+
+if $USE_MAGPIE_ULTRA; then
+  OUTPUT_DIR="${OUTPUT_DIR}-magpie-ultra"
 fi
 
 mkdir -p $OUTPUT_DIR
@@ -82,6 +96,13 @@ if $USE_ENGLISH_LMSYS; then
   fi
   cat $EN_LMSYS_FILE >> $OUTPUT_DIR/train.jsonl
   echo "Added English LMSYS data"
+fi
+
+# Add magpie-ultra dataset processing
+if $USE_MAGPIE_ULTRA; then
+  MAGPIE_ULTRA_FILE=/bb/llm/gaf51275/datasets/raw/instruct/synthetic/magpie-ultra-v0.1/data/train.jsonl
+  cat $MAGPIE_ULTRA_FILE >> $OUTPUT_DIR/train.jsonl
+  echo "Added magpie-ultra data"
 fi
 
 INSTRUCTION_SAMPLES=$(wc -l $OUTPUT_DIR/train.jsonl | awk '{print $1}')
