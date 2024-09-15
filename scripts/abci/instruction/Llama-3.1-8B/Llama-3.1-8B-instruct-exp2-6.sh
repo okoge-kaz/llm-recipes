@@ -1,6 +1,6 @@
 #!/bin/bash
-#$ -l rt_AF=8
-#$ -l h_rt=2:00:00:00
+#$ -l rt_AF=16
+#$ -l h_rt=0:20:00:00
 #$ -j y
 #$ -o outputs/instruction/Llama-3.1-8B/
 #$ -cwd
