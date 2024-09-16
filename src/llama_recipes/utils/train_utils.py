@@ -1,5 +1,6 @@
 import os
 import time
+import sys
 
 import torch
 import torch.cuda.nccl as nccl
@@ -82,9 +83,37 @@ def train(
     # skip batch
     if args.instruction_tuning or args.direct_preference_optimization:
         assert args.continual_pretraining is False
-        print_rank_0(f"Skipping {iteration} batches")
-        for _ in range(iteration):
+        print_rank_0(f"Skipping {iteration} iterations")
+        for _ in range(iteration * gradient_accumulation_steps):
             next(train_dataloader)
+
+    # profile
+    torch_profile_on = args.torch_profile and (
+        torch_distributed.get_rank() in args.torch_profile_ranks
+    )
+    if torch_profile_on:
+        profiler_context = torch.profiler.profile(
+            activities=[
+                torch.profiler.ProfilerActivity.CPU,
+                torch.profiler.ProfilerActivity.CUDA,
+            ],
+            schedule=torch.profiler.schedule(
+                wait=args.torch_profile_wait,
+                warmup=args.torch_profile_warmup,
+                active=args.torch_profile_active,
+                repeat=args.torch_profile_repeat,
+                skip_first=args.torch_profile_skip_first,
+            ),
+            on_trace_ready=torch.profiler.tensorboard_trace_handler(
+                args.tensorboard_dir, use_gzip=False
+            ),
+            record_shapes=args.torch_profile_record_shapes,
+            profile_memory=args.torch_profile_profile_memory,
+            with_stack=args.torch_profile_with_stack,
+            with_flops=args.torch_profile_with_flops,
+            with_modules=args.torch_profile_with_modules,
+        )
+        prof = profiler_context.__enter__()
 
     while iteration < args.train_iters:
         iteration_start_time = time.perf_counter()
@@ -242,6 +271,12 @@ def train(
                 iteration=iteration,
             )
 
+        # pytorch profiler
+        if torch_profile_on:
+            prof.step()
+
+    if torch_profile_on:
+        profiler_context.__exit__(*sys.exc_info())
     torch_distributed.barrier()
     save_checkpoint(
         model=model,  # type: ignore

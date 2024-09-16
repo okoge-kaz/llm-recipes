@@ -47,6 +47,7 @@
     "pbar",
     "peft",
     "plamo",
+    "pretraining",
     "probs",
     "psutil",
     "pubmed",
@@ -57,6 +58,7 @@
     "stabilityai",
     "stablelm",
     "stockmark",
+    "tensorboard",
     "tflops",
     "tobytes",
     "Xformer"

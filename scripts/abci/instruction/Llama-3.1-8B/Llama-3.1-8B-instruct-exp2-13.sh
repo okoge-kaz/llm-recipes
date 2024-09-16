@@ -1,8 +1,8 @@
 #!/bin/bash
-#$ -l rt_AF=1
-#$ -l h_rt=0:08:00:00
+#$ -l rt_AF=8
+#$ -l h_rt=1:00:00:00
 #$ -j y
-#$ -o outputs/instruction/Llama-3-8B/
+#$ -o outputs/instruction/Llama-3.1-8B/
 #$ -cwd
 
 # module load
@@ -51,29 +51,29 @@ SEQ_LENGTH=8192
 DATA_PARALLEL_SIZE=$NUM_GPUS
 
 MICRO_BATCH_SIZE=1
-GLOBAL_BATCH_SIZE=128
+GLOBAL_BATCH_SIZE=256
 
 # optimizer config
-LR=1e-5
-MIN_LR=1e-6
+LR=3.5e-5
+MIN_LR=3.5e-6
 WEIGHT_DECAY=0.1
 GRAD_CLIP=1
 
 # checkpoint
 TOKENIZER_DIR=/groups/gag51395/hf-checkpoints/Meta-Llama-3-8B-Instruct
-CHECKPOINT_DIR=/groups/gag51395/hf-checkpoints/Meta-Llama-3-8B-Instruct
-CHECKPOINT_SAVE_DIR="/bb/llm/gaf51275/2024/checkpoints/Llama-3-8B-Instruct-v0.2/LR_${LR}_MINLR_${MIN_LR}_WD_${WEIGHT_DECAY}_GC_${GRAD_CLIP}"
+CHECKPOINT_DIR=/bb/llm/gaf51275/2024/checkpoints/megatron-to-hf/Llama-3.1-8b/tp4-pp2-ct1-LR2.5E-5-MINLR2.5E-6-WD0.1/iter_0027500
+CHECKPOINT_SAVE_DIR="/bb/llm/gaf51275/2024/checkpoints/Llama-3.1-8B-Instruct/exp2-13/LR_${LR}_MINLR_${MIN_LR}_WD_${WEIGHT_DECAY}_GC_${GRAD_CLIP}"
 
 mkdir -p ${CHECKPOINT_SAVE_DIR}
 
 # dataset
-DATASET_DIR=/groups/gag51395/datasets/instruction/2023-swallow/training/baseline
+DATASET_DIR=/bb/llm/gaf51275/datasets/raw/instruct/training/exp2-filtered-7-next_token-0.25-redacted
 
 TRAIN_DATA_PATH=${DATASET_DIR}/train.jsonl
 VALID_DATA_PATH=${DATASET_DIR}/train.jsonl
 
 # job name
-JOB_NAME="Llama-3-8B-instruct-v0.2-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}-WD=${WEIGHT_DECAY}-GC=${GRAD_CLIP}"
+JOB_NAME="Llama-3.1-8B-instruct-exp-2-13-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}-WD=${WEIGHT_DECAY}-GC=${GRAD_CLIP}"
 
 # run
 mpirun -np $NUM_GPUS \
@@ -92,7 +92,7 @@ mpirun -np $NUM_GPUS \
   --hf-transformer-model-dir ${TOKENIZER_DIR} \
   --instruction-train-data-path ${TRAIN_DATA_PATH} \
   --instruction-valid-data-path ${VALID_DATA_PATH} \
-  --epoch 1 \
+  --epoch 2 \
   --lr ${LR} \
   --min-lr ${MIN_LR} \
   --lr-decay-style cosine \
@@ -102,8 +102,8 @@ mpirun -np $NUM_GPUS \
   --adam-beta1 0.9 \
   --adam-beta2 0.95 \
   --adam-eps 1e-8 \
-  --save-interval 10 \
-  --eval-interval 500 \
+  --save-interval 500 \
+  --eval-interval 500000 \
   --eval-iters 10 \
   --bf16 \
   --mixed-precision \
@@ -117,6 +117,6 @@ mpirun -np $NUM_GPUS \
   --instruction-tuning \
   --save-sampler-state \
   --use-mpi \
-  --wandb-entity "okoge" \
-  --wandb-project "llm-recipes" \
+  --wandb-entity "prj-jalm" \
+  --wandb-project "Llama-3.1-8B-Instruct" \
   --wandb-name "${JOB_NAME}"

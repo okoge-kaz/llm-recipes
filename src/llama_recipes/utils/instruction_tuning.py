@@ -22,8 +22,9 @@ class InstructDataset(Dataset):
         args = get_args()
 
         self.data_path: str = data_path
-        self.max_words: int = args.seq_length
+        self.max_tokens: int = args.seq_length
         self.tokenizer = tokenizer
+        self.debug_mode = args.instruct_debug
 
         # system prompt
         self.system_prompt_role = args.system_prompt_role
@@ -64,40 +65,51 @@ class InstructDataset(Dataset):
                 print(f"index={index}, offset={offset}, line={line}, error={e}")
                 exit(1)
 
-        SYSTEM_PROMPT: list[dict[str, str]] = [
-            {
-                "role": self.system_prompt_role,
-                "content": self.system_prompt_content,
-            }
-        ]
-        # chat template
-        prompt = self.tokenizer.apply_chat_template(
-            conversation=SYSTEM_PROMPT + conversations["input"],  # type: ignore
-            add_generation_prompt=True,
-            tokenize=True,
-        )
+        eod_token_id: int = self.tokenizer.encode("<|end_of_text|>", add_special_tokens=False)[0]
 
-        example = self.tokenizer.apply_chat_template(
-            conversation=SYSTEM_PROMPT + conversations["input"] + [  # type: ignore
-                {"role": "assistant", "content": conversations["output"]}
-            ],
-            tokenize=True,
-        )
-        tensor_example: torch.Tensor = torch.tensor(example, dtype=torch.int64)
+        if "role" in conversations and conversations["role"] == "next_token_prediction":
+            prompt = [self.tokenizer.bos_token_id]
+            example = self.tokenizer.encode(
+                conversations["content"], add_special_tokens=True  # type: ignore  # <bos>text<eos> + <pad>
+            )
+            example += [eod_token_id]
+            tensor_example = torch.tensor(example, dtype=torch.int64)
+        else:
+            SYSTEM_PROMPT: list[dict[str, str]] = [
+                {
+                    "role": self.system_prompt_role,
+                    "content": self.system_prompt_content,
+                }
+            ]
+            # chat template
+            prompt = self.tokenizer.apply_chat_template(
+                conversation=SYSTEM_PROMPT + conversations["input"],  # type: ignore
+                tokenize=True,
+            )
 
-        if len(example) > self.max_words:
+            example = self.tokenizer.apply_chat_template(
+                conversation=SYSTEM_PROMPT + conversations["input"] + [conversations["output"]],  # type: ignore
+                tokenize=True,
+            )
+            tensor_example: torch.Tensor = torch.tensor(example, dtype=torch.int64)
+
+        if self.debug_mode:
+            print(
+                f"prompt: {self.tokenizer.decode(prompt, skip_special_tokens=False)}\n\nexample: {self.tokenizer.decode(example, skip_special_tokens=False)}\n\n",
+                flush=True,
+            )
+
+        if len(example) > self.max_tokens:
             print(f"\n\nWARNING: example={self.tokenizer.decode(example)}\n\n")
 
-        padding_length: int = self.max_words - len(example)
-        eos_token_id: int = self.tokenizer.encode("<|end_of_text|>", add_special_tokens=False)[0]
-        pad_token_id = eos_token_id
+        padding_length: int = self.max_tokens - len(example)
+        pad_token_id: int = self.tokenizer.pad_token_id  # type: ignore
+        assert pad_token_id is not None
         if padding_length > 0:
-            pad_tensor = torch.full(
-                (padding_length,), pad_token_id, dtype=torch.int64
-            )
+            pad_tensor = torch.full((padding_length,), pad_token_id, dtype=torch.int64)
             tensor_example = torch.cat((tensor_example, pad_tensor))
         elif padding_length < 0:
-            tensor_example = tensor_example[: self.max_words]
+            tensor_example = tensor_example[: self.max_tokens]
 
         labels = copy.deepcopy(tensor_example)
         # promptの長さ分だけ -1 で埋める -> 損失関数で無視するようになる
@@ -113,6 +125,36 @@ class InstructDataset(Dataset):
         labels[labels == pad_token_id] = IGNORE_INDEX
         # mask out pad token
         attention_mask = (tensor_example != pad_token_id).float()
+
+        # assert
+        if self.debug_mode:
+            # padding
+            pad_ignore_count = torch.sum((tensor_example == pad_token_id) & (labels == IGNORE_INDEX)).item()
+            assert (
+                pad_ignore_count == padding_length
+            ), f"Number of IGNORE_INDEX due to padding ({pad_ignore_count}) does not match padding_length ({padding_length})"
+
+            # prompt
+            non_pad_ignore_count = torch.sum(
+                (tensor_example != pad_token_id) & (labels == IGNORE_INDEX)).item()
+            assert non_pad_ignore_count == len(
+                prompt
+            ), f"Number of IGNORE_INDEX not due to padding ({non_pad_ignore_count}) does not match prompt length ({len(prompt)})"
+
+            # labels' non ignore index
+            if "output" in conversations:
+                non_ignore_labels = labels[labels != IGNORE_INDEX]
+
+                chat_template = [conversations["output"]]
+                expected_tokens = self.tokenizer.apply_chat_template(
+                    chat_template, return_tensors="pt", tokenize=True  # type: ignore
+                ).squeeze()  # type: ignore
+                if expected_tokens[0] == self.tokenizer.bos_token_id:
+                    expected_tokens = expected_tokens[1:]
+
+                assert torch.all(
+                    non_ignore_labels == expected_tokens
+                ), "Non-ignored labels do not match the tokenized last assistant message"
 
         return {
             "input_ids": tensor_example,

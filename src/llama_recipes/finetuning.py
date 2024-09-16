@@ -1,6 +1,7 @@
 import copy
 import os
 import sys
+from datetime import timedelta
 
 import torch
 import torch.distributed as torch_distributed
@@ -69,7 +70,10 @@ def main() -> None:
     args.gradient_accumulation_steps = args.global_batch_size // (args.micro_batch_size * world_size)
     assert args.gradient_accumulation_steps >= 1
 
-    torch_distributed.init_process_group(backend="nccl", world_size=world_size, rank=rank)
+    timeout = timedelta(minutes=args.distributed_timeout_minutes)
+    torch_distributed.init_process_group(
+        backend="nccl", world_size=world_size, rank=rank, timeout=timeout,
+    )
 
     # wandb setting
     if args.wandb_name is not None and is_rank_0():
@@ -141,6 +145,9 @@ def main() -> None:
         model_name=args.base_model,
     )
 
+    from torch.distributed._tensor.device_mesh import init_device_mesh  # type: ignore
+    device_mesh = init_device_mesh(device_type="cuda", mesh_shape=(world_size, ))
+
     model = FSDP(
         model,  # type: ignore
         auto_wrap_policy=wrapping_policy,
@@ -155,8 +162,12 @@ def main() -> None:
         )
         if args.low_cpu_fsdp and rank != 0
         else None,
+        device_mesh=device_mesh,
     )
     if args.fsdp_activation_checkpointing:
+        # ref: https://github.com/meta-llama/llama-recipes/blob/778e31e35cfbe385a31b3a94b794e3f75e276d1a/src/llama_recipes/finetuning.py#L193-L195
+        # model.enable_input_require_grads()
+        # model.gradient_checkpointing_enable()
         apply_fsdp_checkpointing(model=model, model_name=args.base_model)
 
     if args.direct_preference_optimization:
@@ -255,25 +266,13 @@ def main() -> None:
         else:
             raise ValueError("unknown training mode")
 
-    if args.bf16 and args.optimizer == "anyprecision":
-        optimizer = AnyPrecisionAdamW(
-            model.parameters(),  # type: ignore
-            lr=args.lr,
-            betas=(args.adam_beta1, args.adam_beta2),
-            eps=args.adam_eps,
-            momentum_dtype=torch.bfloat16,
-            variance_dtype=torch.bfloat16,
-            use_kahan_summation=False,
-            weight_decay=args.weight_decay,
-        )
-    else:
-        optimizer = optim.AdamW(
-            model.parameters(),  # type: ignore
-            lr=args.lr,
-            betas=(args.adam_beta1, args.adam_beta2),
-            eps=args.adam_eps,
-            weight_decay=args.weight_decay,
-        )
+    optimizer = optim.AdamW(
+        model.parameters(),  # type: ignore
+        lr=args.lr,
+        betas=(args.adam_beta1, args.adam_beta2),
+        eps=args.adam_eps,
+        weight_decay=args.weight_decay,
+    )
 
     if args.load:
         if args.use_dist_ckpt:
