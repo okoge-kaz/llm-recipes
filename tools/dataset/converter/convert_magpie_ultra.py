@@ -3,37 +3,40 @@ import json
 import sys
 
 
-def process_input(input_file):
+def process_input(input_files):
     data = []
-    with open(input_file, "r", encoding="utf-8") as f:
-        for line in f:
-            try:
-                item = json.loads(line.strip())
-                data.append(item)
-            except json.JSONDecodeError as e:
-                print(f"Warning: Skipping invalid JSON line: {line.strip()}", file=sys.stderr)
+    for input_file in input_files:
+        with open(input_file, "r", encoding="utf-8") as f:
+            for line in f:
+                try:
+                    item = json.loads(line.strip())
+                    data.append(item)
+                except json.JSONDecodeError as e:
+                    print(f"Warning: Skipping invalid JSON line in {input_file}: {line.strip()}", file=sys.stderr)
     return data
 
 
-def convert_to_output(input_data, include_english: bool = False):
+def convert_to_output(input_data, include_english: bool = False, include_japanese: bool = False):
     output_data = []
     for item in input_data:
         if item.get("quality") in ["average", "good", "excellent"]:
-            output_item = {
-                "input": [
-                    {
-                        "role": "user",
-                        "content": item["processed_translated_instruction"]
-                    }
-                ],
-                "output": {
-                    "role": "assistant",
-                    "content": item["processed_translated_response"]
-                },
-                "quality": item["quality"],
-                "primary_tag": item["primary_tag"],
-            }
-            output_data.append(output_item)
+            if include_japanese:
+                output_item = {
+                    "input": [
+                        {
+                            "role": "user",
+                            "content": item["processed_translated_instruction"]
+                        }
+                    ],
+                    "output": {
+                        "role": "assistant",
+                        "content": item["processed_translated_response"]
+                    },
+                    "quality": item["quality"],
+                    "primary_tag": item["primary_tag"],
+                }
+                output_data.append(output_item)
+
             if include_english:
                 en_output_item = {
                     "input": [
@@ -62,17 +65,20 @@ def save_output(output_data, output_file):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Convert input JSONL to output JSONL")
-    parser.add_argument("--input", required=True, help="Input JSONL file path")
+    parser = argparse.ArgumentParser(description="Convert input JSONL files to output JSONL")
+    parser.add_argument("--input", required=True, nargs="+", help="Input JSONL file paths")
     parser.add_argument("--output", required=True, help="Output JSONL file path")
     parser.add_argument("--include-english", action="store_true")
+    parser.add_argument("--include-japanese", action="store_true")
 
     args = parser.parse_args()
 
     try:
         input_data = process_input(args.input)
         output_data = convert_to_output(
-            input_data=input_data, include_english=args.include_english
+            input_data=input_data,
+            include_english=args.include_english,
+            include_japanese=args.include_japanese,
         )
         save_output(output_data, args.output)
         print(f"Conversion completed. Output saved to {args.output}")
