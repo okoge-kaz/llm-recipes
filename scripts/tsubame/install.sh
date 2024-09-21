@@ -7,7 +7,7 @@
 # Load modules
 module use /gs/fs/tga-NII-LLM/modules/modulefiles
 
-module load ylab/cuda/12.4
+module load ylab/cuda/12.1
 module load ylab/cudnn/9.1.0
 module load ylab/nccl/cuda-12.4/2.20.5
 module load ylab/hpcx/2.18.1
