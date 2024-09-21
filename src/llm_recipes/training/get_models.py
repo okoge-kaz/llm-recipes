@@ -8,7 +8,7 @@ from transformers import (
     Gemma2ForCausalLM,
     AutoModelForCausalLM,
 )
-from llama_recipes.utils.distributed import is_rank_0
+from llm_recipes.utils.distributed import is_rank_0
 import torch
 from megatron_lm.megatron.global_vars import get_args
 

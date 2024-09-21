@@ -11,8 +11,8 @@ from torch.distributed.fsdp import FullyShardedDataParallel as FSDP  # type: ign
 from torch.optim.lr_scheduler import StepLR
 import wandb
 
-from llama_recipes.policies import AnyPrecisionAdamW, apply_fsdp_checkpointing
-from llama_recipes.utils.train_utils import (
+from llm_recipes.policies import AnyPrecisionAdamW, apply_fsdp_checkpointing
+from llm_recipes.utils.train_utils import (
     clear_gpu_cache,
     freeze_transformer_layers,
     get_policies,
@@ -20,17 +20,17 @@ from llama_recipes.utils.train_utils import (
     setup_environ_flags,
     train,
 )
-from llama_recipes.optimizer import WarmupCosineAnnealingLR
-from llama_recipes.utils.random import set_seed
-from llama_recipes.utils.distributed import (
+from llm_recipes.optimizer import WarmupCosineAnnealingLR
+from llm_recipes.utils.random import set_seed
+from llm_recipes.utils.distributed import (
     print_rank_0,
     is_rank_0,
     set_mpi_env,
     get_rank,
     get_local_rank,
 )
-from llama_recipes.get_models import get_model
-from llama_recipes.utils.checkpoint import (
+from llm_recipes.training.get_models import get_model
+from llm_recipes.core.checkpoint.checkpoint import (
     load_model_state_dict,
     load_optimizer_state_dict,
     load_dist_model_state_dict,
@@ -40,9 +40,9 @@ from llama_recipes.utils.checkpoint import (
     get_latest_iteration,
 )
 
-from llama_recipes.arguments import parse_args
-from llama_recipes.get_fsdp import get_sharding_strategy
-from llama_recipes.utils.precision import preserve_fp32_buffers
+from llm_recipes.training.arguments import parse_args
+from llm_recipes.core.fsdp.get_fsdp import get_sharding_strategy
+from llm_recipes.core.precision.precision import preserve_fp32_buffers
 from megatron_lm.megatron.global_vars import set_global_variables
 
 
@@ -165,7 +165,7 @@ def main() -> None:
         device_mesh=device_mesh,
     )
     if args.fsdp_activation_checkpointing:
-        # ref: https://github.com/meta-llama/llama-recipes/blob/778e31e35cfbe385a31b3a94b794e3f75e276d1a/src/llama_recipes/finetuning.py#L193-L195
+        # ref: https://github.com/meta-llama/llama-recipes/blob/778e31e35cfbe385a31b3a94b794e3f75e276d1a/src/llm_recipes/finetuning.py#L193-L195
         # model.enable_input_require_grads()
         # model.gradient_checkpointing_enable()
         apply_fsdp_checkpointing(model=model, model_name=args.base_model)
@@ -192,7 +192,7 @@ def main() -> None:
 
     dpo_loss_fn = None
     if args.continual_pretraining:
-        from llama_recipes.datasets.pretrain_dataset import build_train_valid_test_datasets
+        from llm_recipes.core.dataset.pretrain_dataset import build_train_valid_test_datasets
         from megatron_lm.megatron.data.data_samplers import build_pretraining_data_loader
 
         train_dataset, validation_dataset, test_dataset = build_train_valid_test_datasets()
@@ -212,8 +212,8 @@ def main() -> None:
 
     else:
         from transformers import AutoTokenizer
-        from llama_recipes.utils.instruction_tuning import get_instruction_tuning_dataloader
-        from llama_recipes.utils.dpo_dataset import get_dpo_dataloader
+        from llm_recipes.core.dataset.instruction_tuning_dataset import get_instruction_tuning_dataloader
+        from llm_recipes.core.dataset.dpo_dataset import get_dpo_dataloader
 
         hf_tokenizer = AutoTokenizer.from_pretrained(
             pretrained_model_name_or_path=args.hf_transformer_model_dir
@@ -235,11 +235,11 @@ def main() -> None:
             args.lr_warmup_iters = args.lr_decay_iters // 10
             args.save_sampler_state = True
             if rank == 0:
-                from llama_recipes.utils.wandb_utils import update_iter_info
+                from llm_recipes.core.logs.wandb_utils import update_iter_info
                 update_iter_info()
 
         elif args.direct_preference_optimization:
-            from llama_recipes.utils.dpo_loss import DPOLoss
+            from llm_recipes.utils.dpo_loss import DPOLoss
 
             dpo_loss_fn = DPOLoss(
                 beta=args.dpo_beta,
@@ -261,7 +261,7 @@ def main() -> None:
             args.lr_warmup_iters = args.lr_decay_iters // 10
             args.save_sampler_state = True
             if rank == 0:
-                from llama_recipes.utils.wandb_utils import update_iter_info
+                from llm_recipes.core.logs.wandb_utils import update_iter_info
                 update_iter_info()
         else:
             raise ValueError("unknown training mode")

@@ -8,11 +8,11 @@ from torch import distributed as torch_distributed  # noqa: F401
 from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 from torch.nn.utils import clip_grad_norm_  # type: ignore
 
-from llama_recipes.policies import fpSixteen, bfSixteen, bfSixteen_mixed, get_decoder_layer_wrapper
-from llama_recipes.utils.distributed import print_rank_0
-from llama_recipes.utils.wandb_utils import log_model_info, log_wandb
-from llama_recipes.utils.checkpoint import save_checkpoint, get_latest_iteration
-from llama_recipes.utils.dpo_loss import DPOLoss
+from llm_recipes.policies import fpSixteen, bfSixteen, bfSixteen_mixed, get_decoder_layer_wrapper
+from llm_recipes.utils.distributed import print_rank_0
+from llm_recipes.core.logs.wandb_utils import log_model_info, log_wandb
+from llm_recipes.core.checkpoint.checkpoint import save_checkpoint, get_latest_iteration
+from llm_recipes.utils.dpo_loss import DPOLoss
 
 from typing import Optional, Any
 import wandb
@@ -36,7 +36,7 @@ def train(
     model,
     train_dataloader,
     eval_dataloader,
-    optimizer: torch.optim.AdamW,
+    optimizer: torch.optim.AdamW,  # type: ignore
     lr_scheduler: torch.optim.lr_scheduler.LRScheduler,
     gradient_accumulation_steps: int,
     local_rank: Optional[int] = None,
@@ -127,7 +127,7 @@ def train(
 
             if args.direct_preference_optimization:
                 # DPO( Direct Preference Optimization)
-                from llama_recipes.utils.dpo import concatenated_forward
+                from llm_recipes.utils.dpo import concatenated_forward
 
                 if dpo_loss_fn is None:
                     raise ValueError(

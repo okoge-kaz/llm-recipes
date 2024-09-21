@@ -94,7 +94,7 @@ Prepare your data in the below format and save it as a JSONL file:
 
 #### 2. **Change Dataset Class**
 
-Please modify the `Dataset` class in `src/llama_recipes/utils/instruction_tuning.py` to adjust to the model's expected format.
+Please modify the `Dataset` class in `src/llm_recipes/utils/instruction_tuning.py` to adjust to the model's expected format.
 But, almost all the models have chat templates, so you may not need to change the `Dataset` class.
 
 #### 3. **Indexing**
@@ -148,7 +148,7 @@ python megatron_lm/tools/preprocess_data.py \
 #### 3. **Training**
 
 We support Llama-2, Llama-3, Llama-3.1, Mistral, Codestral, Phi-3, Yi-1.5, and gemma-2.
-If you want to continually pre-train or instruction tune other models, you should modify `src/llama_recipes/get_models.py` and `src/llama_recipes/get_model_decoder_layer.py`.
+If you want to continually pre-train or instruction tune other models, you should modify `src/llm_recipes/get_models.py` and `src/llm_recipes/get_model_decoder_layer.py`.
 
 We provide example scripts for continual pre-training for codestral-22B in `scripts/gcp/codestral-22b.sh`.
 You can modify the script to suit your needs.

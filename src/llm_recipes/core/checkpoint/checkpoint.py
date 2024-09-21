@@ -28,7 +28,9 @@ def get_local_model_state_dict(model: FSDP) -> dict[str, torch.Tensor]:
     return state_dict
 
 
-def get_local_optimizer_state_dict(model: FSDP, optimizer: torch.optim.Optimizer) -> dict[str, torch.Tensor]:
+def get_local_optimizer_state_dict(
+        model: FSDP, optimizer: torch.optim.Optimizer  # type: ignore
+    ) -> dict[str, torch.Tensor]:
     with FSDP.state_dict_type(
         model,
         state_dict_type=StateDictType.FULL_STATE_DICT,
@@ -41,7 +43,7 @@ def get_local_optimizer_state_dict(model: FSDP, optimizer: torch.optim.Optimizer
 
 
 def save_dist_model_and_optimizer_state_dict(
-    model: FSDP, optimizer: torch.optim.Optimizer, path: str
+    model: FSDP, optimizer: torch.optim.Optimizer, path: str  # type: ignore
 ) -> None:
     if torch_distributed.get_rank() == 0:
         print(f"Saving model and optimizer state dict to {path}")
@@ -76,7 +78,9 @@ def save_model_state_dict(model: FSDP, path: str) -> None:
         gc.collect()
 
 
-def save_optimizer_state_dict(model: FSDP, optimizer: torch.optim.Optimizer, path: str) -> None:
+def save_optimizer_state_dict(
+        model: FSDP, optimizer: torch.optim.Optimizer, path: str  # type: ignore
+    ) -> None:
     state_dict = get_local_optimizer_state_dict(model, optimizer)
     if torch_distributed.get_rank() == 0:
         print(f"Saving optimizer state dict to {path}")
@@ -125,7 +129,7 @@ def save_rng_state(path: str) -> None:
 
 def save_checkpoint(
     model: FSDP,
-    optimizer: torch.optim.Optimizer,
+    optimizer: torch.optim.Optimizer,  # type: ignore
     scheduler: torch.optim.lr_scheduler.LRScheduler,
     path: str,
     iteration: int,
@@ -230,7 +234,9 @@ def load_dist_model_state_dict(model: FSDP, path: str) -> None:
         print(f"Loaded model state dict from {latest_checkpoint_path}, took {time.perf_counter() - t0:.2f}s")
 
 
-def load_optimizer_state_dict(model: FSDP, optimizer: torch.optim.Optimizer, path: str) -> None:
+def load_optimizer_state_dict(
+        model: FSDP, optimizer: torch.optim.Optimizer, path: str  # type: ignore
+    ) -> None:
     latest_iteration: int = get_latest_iteration(path)
     if latest_iteration == 0:
         if torch_distributed.get_rank() == 0:
@@ -257,7 +263,9 @@ def load_optimizer_state_dict(model: FSDP, optimizer: torch.optim.Optimizer, pat
         print(f"Loaded optimizer state dict from {latest_checkpoint_path}/optimizer.pt")
 
 
-def load_dist_optimizer_state_dict(model: FSDP, optimizer: torch.optim.Optimizer, path: str) -> None:
+def load_dist_optimizer_state_dict(
+        model: FSDP, optimizer: torch.optim.Optimizer, path: str  # type: ignore
+    ) -> None:
     latest_iteration: int = get_latest_iteration(path)
     if latest_iteration == 0:
         if torch_distributed.get_rank() == 0:

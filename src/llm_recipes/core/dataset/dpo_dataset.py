@@ -8,7 +8,7 @@ from torch.utils.data import Dataset, DataLoader
 import torch.distributed as torch_distributed
 from transformers.tokenization_utils import PreTrainedTokenizer
 from pathlib import Path
-from llama_recipes.utils.distributed import print_rank_0
+from llm_recipes.utils.distributed import print_rank_0
 
 from megatron_lm.megatron.global_vars import get_args, set_sampler
 
@@ -155,8 +155,8 @@ def get_dpo_dataloader(
     data_path: str,
     train: bool = False,
 ) -> DataLoader:
-    from llama_recipes.utils.sequence_length_warmup import CustomDistributedSampler
-    from llama_recipes.utils.checkpoint import load_sampler_state_dict
+    from llm_recipes.utils.sequence_length_warmup import CustomDistributedSampler
+    from llm_recipes.core.checkpoint.checkpoint import load_sampler_state_dict
 
     args = get_args()
 

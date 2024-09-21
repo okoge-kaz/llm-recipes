@@ -31,7 +31,7 @@ import torch.distributed as torch_distributed
 from megatron_lm.megatron.global_vars import (
     get_args,
 )
-from llama_recipes.utils.distributed import print_rank_0
+from llm_recipes.utils.distributed import print_rank_0
 from megatron_lm.megatron.core.datasets.indexed_dataset import MMapIndexedDataset
 
 

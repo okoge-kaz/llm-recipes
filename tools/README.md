@@ -40,7 +40,7 @@ If you use [ABCI](https://abci.ai/) to run the experiments, install scripts are 
 
 [scripts/abci/instruction](scripts/abci/instruction) contains the scripts to run instruction tunings on ABCI.
 
-If you want to use custom instructions, you need to modify the `src/llama_recipes/datasets/alpaca_dataset.py`.
+If you want to use custom instructions, you need to modify the `src/llm_recipes/datasets/alpaca_dataset.py`.
 
 ## LLM Continual Pre-Training
 

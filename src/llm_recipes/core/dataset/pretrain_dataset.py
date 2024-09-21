@@ -1,6 +1,6 @@
 import torch.distributed as torch_distributed
 
-from llama_recipes.utils.distributed import print_rank_0
+from llm_recipes.utils.distributed import print_rank_0
 
 from megatron_lm.megatron.core.datasets.blended_megatron_dataset_builder import BlendedMegatronDatasetBuilder
 from megatron_lm.megatron.core.datasets.gpt_dataset import GPTDataset, GPTDatasetConfig

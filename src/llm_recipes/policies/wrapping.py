@@ -1,13 +1,10 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# This software may be used and distributed according to the terms of the Llama 2 Community License Agreement.
-
 import functools
 
 from torch.distributed.fsdp.wrap import (
     transformer_auto_wrap_policy,
     size_based_auto_wrap_policy,
 )
-from llama_recipes.get_model_decoder_layer import get_model_decoder_layer
+from llm_recipes.training.get_model_decoder_layer import get_model_decoder_layer
 
 
 def get_size_policy(min_params=1e8):
