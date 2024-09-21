@@ -12,7 +12,7 @@ from llm_recipes.policies import fpSixteen, bfSixteen, bfSixteen_mixed, get_deco
 from llm_recipes.utils.distributed import print_rank_0
 from llm_recipes.core.logs.wandb_utils import log_model_info, log_wandb
 from llm_recipes.core.checkpoint.checkpoint import save_checkpoint, get_latest_iteration
-from llm_recipes.utils.dpo_loss import DPOLoss
+from llm_recipes.core.dpo.dpo_loss import DPOLoss
 
 from typing import Optional, Any
 import wandb
@@ -127,7 +127,7 @@ def train(
 
             if args.direct_preference_optimization:
                 # DPO( Direct Preference Optimization)
-                from llm_recipes.utils.dpo import concatenated_forward
+                from llm_recipes.core.dpo.dpo import concatenated_forward
 
                 if dpo_loss_fn is None:
                     raise ValueError(

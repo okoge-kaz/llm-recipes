@@ -12,7 +12,7 @@ from torch.optim.lr_scheduler import StepLR
 import wandb
 
 from llm_recipes.policies import AnyPrecisionAdamW, apply_fsdp_checkpointing
-from llm_recipes.utils.train_utils import (
+from llm_recipes.training.training import (
     clear_gpu_cache,
     freeze_transformer_layers,
     get_policies,
@@ -20,7 +20,7 @@ from llm_recipes.utils.train_utils import (
     setup_environ_flags,
     train,
 )
-from llm_recipes.optimizer import WarmupCosineAnnealingLR
+from llm_recipes.core.optimizer.scheduler import WarmupCosineAnnealingLR
 from llm_recipes.utils.random import set_seed
 from llm_recipes.utils.distributed import (
     print_rank_0,

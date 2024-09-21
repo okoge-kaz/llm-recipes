@@ -19,11 +19,11 @@ def log_model_info(model: torch.nn.Module) -> None:
 
     print(f"model info: {model}")
     print(f"model config: {model.config}")
-    wandb.config.update(model_config)
+    wandb.config.update(model_config)  # type: ignore
 
     # distributed training info
     world_size = int(os.environ["WORLD_SIZE"])
-    wandb.config.update({"world_size": world_size})
+    wandb.config.update({"world_size": world_size})  # type: ignore
 
 
 def log_wandb(
@@ -31,7 +31,7 @@ def log_wandb(
     real_seq_len: int,
     model: torch.nn.Module,
     accumulation_loss: float,
-    optimizer: torch.optim.Optimizer,
+    optimizer: torch.optim.Optimizer,  # type: ignore
     iteration: int,
     gradient_accumulation_steps: int,
     world_size: int,
@@ -178,7 +178,7 @@ def update_iter_info() -> None:
         flush=True,
     )
 
-    wandb.config.update(
+    wandb.config.update(  # type: ignore
         {
             "train_iters": args.train_iters,
             "lr_decay_iters": args.lr_decay_iters,
