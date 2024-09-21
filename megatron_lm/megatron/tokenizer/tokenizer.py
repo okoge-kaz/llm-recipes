@@ -7,7 +7,7 @@ from abc import abstractmethod
 import os
 from typing import Optional
 
-from llm_recipes.utils.distributed import is_rank_0
+from llm_recipes.core.fsdp.distributed import is_rank_0
 from megatron_lm.megatron.core.datasets.megatron_tokenizer import MegatronTokenizer
 
 

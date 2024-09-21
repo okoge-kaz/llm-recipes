@@ -11,7 +11,7 @@ from torch.distributed.fsdp import FullyShardedDataParallel as FSDP  # type: ign
 from torch.optim.lr_scheduler import StepLR
 import wandb
 
-from llm_recipes.policies import AnyPrecisionAdamW, apply_fsdp_checkpointing
+from llm_recipes.core.fsdp.checkpointing import apply_fsdp_checkpointing
 from llm_recipes.training.training import (
     clear_gpu_cache,
     freeze_transformer_layers,
@@ -21,8 +21,8 @@ from llm_recipes.training.training import (
     train,
 )
 from llm_recipes.core.optimizer.scheduler import WarmupCosineAnnealingLR
-from llm_recipes.utils.random import set_seed
-from llm_recipes.utils.distributed import (
+from llm_recipes.training.random import set_seed
+from llm_recipes.core.fsdp.distributed import (
     print_rank_0,
     is_rank_0,
     set_mpi_env,
@@ -239,7 +239,7 @@ def main() -> None:
                 update_iter_info()
 
         elif args.direct_preference_optimization:
-            from llm_recipes.utils.dpo_loss import DPOLoss
+            from llm_recipes.core.dpo.dpo_loss import DPOLoss
 
             dpo_loss_fn = DPOLoss(
                 beta=args.dpo_beta,

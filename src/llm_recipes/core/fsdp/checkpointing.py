@@ -11,7 +11,7 @@ non_reentrant_wrapper = partial(
     checkpoint_wrapper,
     checkpoint_impl=CheckpointImpl.NO_REENTRANT,
 )
-from llm_recipes.utils.distributed import print_rank_0
+from llm_recipes.core.fsdp.distributed import print_rank_0
 
 
 def apply_fsdp_checkpointing(model, model_name: str) -> None:

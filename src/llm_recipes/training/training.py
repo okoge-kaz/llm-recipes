@@ -8,8 +8,11 @@ from torch import distributed as torch_distributed  # noqa: F401
 from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 from torch.nn.utils import clip_grad_norm_  # type: ignore
 
-from llm_recipes.policies import fpSixteen, bfSixteen, bfSixteen_mixed, get_decoder_layer_wrapper
-from llm_recipes.utils.distributed import print_rank_0
+from llm_recipes.core.precision.mixed_precision import (
+    fpSixteen, bfSixteen, bfSixteen_mixed
+)
+from llm_recipes.core.fsdp.wrapping import get_decoder_layer_wrapper
+from llm_recipes.core.fsdp.distributed import print_rank_0
 from llm_recipes.core.logs.wandb_utils import log_model_info, log_wandb
 from llm_recipes.core.checkpoint.checkpoint import save_checkpoint, get_latest_iteration
 from llm_recipes.core.dpo.dpo_loss import DPOLoss
