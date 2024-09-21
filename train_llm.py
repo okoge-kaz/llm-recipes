@@ -87,7 +87,7 @@ def main() -> None:
             "name": args.wandb_name,
             "config": vars(args),
         }
-        wandb.require("core")
+        wandb.require("core")  # type: ignore
         wandb.init(**wandb_setting)
 
     if torch_distributed.is_initialized():
@@ -266,7 +266,7 @@ def main() -> None:
         else:
             raise ValueError("unknown training mode")
 
-    optimizer = optim.AdamW(
+    optimizer = optim.AdamW(  # type: ignore
         model.parameters(),  # type: ignore
         lr=args.lr,
         betas=(args.adam_beta1, args.adam_beta2),

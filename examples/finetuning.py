@@ -7,7 +7,7 @@ current_path: str = os.getcwd()
 sys.path.append(f"{current_path}/src")
 sys.path.append(current_path)
 
-from llama_recipes.finetuning import main
+from train_llm import main
 
 if __name__ == "__main__":
     main()

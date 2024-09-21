@@ -99,7 +99,7 @@ mpirun -np $NUM_GPUS \
   -x MASTER_PORT=$MASTER_PORT \
   -bind-to none -map-by slot \
   -x PATH \
-  python examples/finetuning.py \
+  python train_llm.py \
   --seq-length ${SEQ_LENGTH} \
   --sliding-window-size ${SLIDING_WINDOW_SIZE} \
   --micro-batch-size ${MICRO_BATCH_SIZE} \
