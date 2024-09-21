@@ -7,8 +7,11 @@ def process_jsonl(input_file, output_file):
     with open(input_file, "r") as infile, open(output_file, "w") as outfile:
         for line in infile:
             data = json.loads(line)
+            score = data.get("scores", None).get("overall", None)
+            if score is None or score < 8:
+                continue
 
-            conversations = data.get("conversation", [])
+            conversations = data.get("messages", [])
             assert len(conversations) >= 2
 
             input_data = conversations[:-1]
