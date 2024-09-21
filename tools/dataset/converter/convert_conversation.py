@@ -8,7 +8,7 @@ def process_jsonl(input_file, output_file):
         for line in infile:
             data = json.loads(line)
 
-            conversations = data.get("conversations", [])
+            conversations = data.get("conversation", [])
             assert len(conversations) >= 2
 
             input_data = conversations[:-1]
@@ -28,12 +28,8 @@ def main():
 
     args = parser.parse_args()
 
-    try:
-        process_jsonl(args.input, args.output)
-        print(f"Processing complete. Output written to {args.output}")
-    except Exception as e:
-        print(f"An error occurred: {str(e)}", file=sys.stderr)
-        sys.exit(1)
+    process_jsonl(args.input, args.output)
+    print(f"Processing complete. Output written to {args.output}")
 
 
 if __name__ == "__main__":

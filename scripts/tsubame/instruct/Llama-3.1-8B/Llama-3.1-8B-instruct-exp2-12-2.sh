@@ -54,18 +54,18 @@ GRAD_CLIP=1
 # checkpoint
 TOKENIZER_DIR=/gs/bs/tga-NII-LLM/hf-checkpoints/Meta-Llama-3-8B-Instruct-pad-token
 CHECKPOINT_DIR=/gs/bs/tga-NII-LLM/hf-checkpoints/Llama-3.1-8B-LR2.5e-5-MINLR2.5E-6-WD0.1-iter0027500
-CHECKPOINT_SAVE_DIR="/gs/bs/tga-NII-LLM/checkpoints/Llama-3.1-8B-Instruct/exp2-10-7/LR_${LR}_MINLR_${MIN_LR}_WD_${WEIGHT_DECAY}_GC_${GRAD_CLIP}"
+CHECKPOINT_SAVE_DIR="/gs/bs/tga-NII-LLM/checkpoints/Llama-3.1-8B-Instruct/exp2-12-2/LR_${LR}_MINLR_${MIN_LR}_WD_${WEIGHT_DECAY}_GC_${GRAD_CLIP}"
 
 mkdir -p ${CHECKPOINT_SAVE_DIR}
 
 # dataset
-DATASET_DIR=/gs/bs/tga-NII-LLM/datasets/raw/instruct/training/exp2-10-7
+DATASET_DIR=/gs/bs/tga-NII-LLM/datasets/raw/instruct/training/exp2-12-2/
 
 TRAIN_DATA_PATH=${DATASET_DIR}/train.jsonl
 VALID_DATA_PATH=${DATASET_DIR}/train.jsonl
 
 # job name
-JOB_NAME="Llama-3.1-8B-instruct-exp-2-10-7-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}-WD=${WEIGHT_DECAY}-GC=${GRAD_CLIP}"
+JOB_NAME="Llama-3.1-8B-instruct-exp-2-12-2-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}-WD=${WEIGHT_DECAY}-GC=${GRAD_CLIP}"
 
 # run
 mpirun -np $NUM_GPUS \

@@ -1,7 +1,7 @@
 #!/bin/sh
 #$ -cwd
 #$ -l node_f=16
-#$ -l h_rt=2:00:00:00
+#$ -l h_rt=1:00:00:00
 #$ -o outputs/Llama-3.1-8b-instruct/$JOB_ID.log
 #$ -e outputs/Llama-3.1-8b-instruct/$JOB_ID.log
 #$ -p -5
@@ -59,7 +59,7 @@ CHECKPOINT_SAVE_DIR="/gs/bs/tga-NII-LLM/checkpoints/Llama-3.1-8B-Instruct/exp2-1
 mkdir -p ${CHECKPOINT_SAVE_DIR}
 
 # dataset
-DATASET_DIR=/gs/bs/tga-NII-LLM/datasets/raw/instruct/training/exp2-filtered-0-next_token-0-no-oasst-en-lmsys-magpie-ultra-en-gemma-magpie
+DATASET_DIR=/gs/bs/tga-NII-LLM/datasets/raw/instruct/training/exp2-10-6
 
 TRAIN_DATA_PATH=${DATASET_DIR}/train.jsonl
 VALID_DATA_PATH=${DATASET_DIR}/train.jsonl
