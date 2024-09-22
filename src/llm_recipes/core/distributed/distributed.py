@@ -1,12 +1,17 @@
 import torch
-import torch.distributed as torch_distributed
 from torch.distributed.device_mesh import init_device_mesh
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.distributed.optim import ZeroRedundancyOptimizer
 
+from llm_recipes.core.tensor_parallel.automatic_tensor import automatic_tensor_split
+from llm_recipes.core.pipeline_parallel.automatic_pipeline import automatic_pipeline
+
+from megatron_lm.megatron.global_vars import get_args
+
 
 # ref: https://github.com/pytorch/examples/blob/cdef4d43fb1a2c6c4349daa5080e4e8731c34569/distributed/tensor_parallelism/fsdp_tp_example.py#L83-L93
 def init_distributed(
+    model: torch.nn.Module,
     rank: int,
     world_size: int,
     tensor_parallel_size: int,
@@ -16,6 +21,8 @@ def init_distributed(
     """
     This is the script for 3D parallelism which combines tensor parallelism, pipeline parallelism, and data parallelism.
     """
+    args = get_args()
+
     # validation
     model_parallel_size = tensor_parallel_size * pipeline_parallel_size
     assert world_size % model_parallel_size == 0, "world_size must be divisible by model_parallel_size"
@@ -39,6 +46,31 @@ def init_distributed(
     # We will use dp_rank for setting the random seed
     # to mimic the behavior of the dataloader.
     dp_rank = dp_mesh.get_local_rank()
+
+    # tensor parallel
+    model = automatic_tensor_split(
+        model=model,
+        tp_mesh=tp_mesh,
+    )
+
+    # data parallel
+    # ref: https://github.com/pytorch/examples/blob/cdef4d43fb1a2c6c4349daa5080e4e8731c34569/distributed/tensor_parallelism/fsdp_tp_example.py#L154
+    model = FSDP(
+        module=model,
+        process_group=dp_mesh.get_group(),
+        use_orig_params=True,
+    )
+
+    # pipeline parallel
+    pipeline_schedule = automatic_pipeline(
+        model=model,
+        micro_batch_inputs=...,  # TODO: pass micro_batch
+        pipeline_parallel_size=pipeline_parallel_size,
+        args=args,
+        tp_mesh=tp_mesh,
+    )
+
+    return model, pipeline_schedule
 
 
 # ref: https://pytorch.org/tutorials/recipes/zero_redundancy_optimizer.html#how-to-use-zeroredundancyoptimizer
