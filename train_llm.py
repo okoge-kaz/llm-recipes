@@ -44,10 +44,11 @@ from llm_recipes.training.arguments import parse_args
 from llm_recipes.core.fsdp.get_fsdp import get_sharding_strategy
 from llm_recipes.core.precision.precision import preserve_fp32_buffers
 from megatron_lm.megatron.global_vars import set_global_variables
+from llm_recipes.core.distributed.distributed import get_distributed_optimizer
 
 
 current_path: str = os.getcwd()
-sys.path.append(f"{current_path}/llama-recipes/src/")
+sys.path.append(f"{current_path}/llm-recipes/src/")
 
 
 def main() -> None:
@@ -266,13 +267,26 @@ def main() -> None:
         else:
             raise ValueError("unknown training mode")
 
-    optimizer = optim.AdamW(  # type: ignore
-        model.parameters(),  # type: ignore
-        lr=args.lr,
-        betas=(args.adam_beta1, args.adam_beta2),
-        eps=args.adam_eps,
-        weight_decay=args.weight_decay,
-    )
+    if args.use_distributed_optimizer:
+        assert args.use_3d_parallelism is True, "3D parallelism must be enabled for distributed optimizer"
+        assert args.use_fsdp is False, "FSDP must be disabled for distributed optimizer"
+
+        optimizer = get_distributed_optimizer(
+            model=model,
+            lr=args.lr,
+            adam_beta1=args.adam_beta1,
+            adam_beta2=args.adam_beta2,
+            adam_epsilon=args.adam_eps,
+            weight_decay=args.weight_decay,
+        )
+    else:
+        optimizer = optim.adamw.AdamW(
+            model.parameters(),  # type: ignore
+            lr=args.lr,
+            betas=(args.adam_beta1, args.adam_beta2),
+            eps=args.adam_eps,
+            weight_decay=args.weight_decay,
+        )
 
     if args.load:
         if args.use_dist_ckpt:
