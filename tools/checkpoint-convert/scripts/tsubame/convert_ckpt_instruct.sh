@@ -1,7 +1,7 @@
 #!/bin/sh
 #$ -cwd
 #$ -l cpu_40=1
-#$ -l h_rt=0:01:00:00
+#$ -l h_rt=0:05:00:00
 #$ -o outputs/convert/$JOB_ID.log
 #$ -e outputs/convert/$JOB_ID.log
 #$ -p -5
