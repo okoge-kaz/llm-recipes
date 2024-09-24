@@ -1,9 +1,9 @@
 #!/bin/sh
 #$ -cwd
 #$ -l node_f=16
-#$ -l h_rt=0:22:50:00
-#$ -o outputs/Llama-3.1-8b-instruct/$JOB_ID.log
-#$ -e outputs/Llama-3.1-8b-instruct/$JOB_ID.log
+#$ -l h_rt=0:15:30:00
+#$ -o outputs/Llama-3.1-70b-instruct/$JOB_ID.log
+#$ -e outputs/Llama-3.1-70b-instruct/$JOB_ID.log
 #$ -p -5
 
 # module load
@@ -52,9 +52,9 @@ WEIGHT_DECAY=0.1
 GRAD_CLIP=1
 
 # checkpoint
-TOKENIZER_DIR=/gs/bs/tga-NII-LLM/hf-checkpoints/Meta-Llama-3-8B-Instruct-pad-token
-CHECKPOINT_DIR=/gs/bs/tga-NII-LLM/hf-checkpoints/Llama-3.1-8B-LR2.5e-5-MINLR2.5E-6-WD0.1-iter0027500
-CHECKPOINT_SAVE_DIR="/gs/bs/tga-NII-LLM/checkpoints/Llama-3.1-8B-Instruct/exp2-12-2/LR_${LR}_MINLR_${MIN_LR}_WD_${WEIGHT_DECAY}_GC_${GRAD_CLIP}"
+TOKENIZER_DIR=/gs/bs/tga-NII-LLM/hf-checkpoints/Meta-Llama-3-70B-Instruct
+CHECKPOINT_DIR=/gs/bs/tga-NII-LLM/checkpoints/megatron-to-hf/Llama-3.1-70b/LR1.0E-5-MINLR1.0E-6-WD0.1/iter_0025000
+CHECKPOINT_SAVE_DIR="/gs/bs/tga-NII-LLM/checkpoints/Llama-3.1-70B-Instruct/exp2-12-2/LR_${LR}_MINLR_${MIN_LR}_WD_${WEIGHT_DECAY}_GC_${GRAD_CLIP}"
 
 mkdir -p ${CHECKPOINT_SAVE_DIR}
 
@@ -65,7 +65,7 @@ TRAIN_DATA_PATH=${DATASET_DIR}/train.jsonl
 VALID_DATA_PATH=${DATASET_DIR}/train.jsonl
 
 # job name
-JOB_NAME="Llama-3.1-8B-instruct-exp-2-12-2-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}-WD=${WEIGHT_DECAY}-GC=${GRAD_CLIP}"
+JOB_NAME="Llama-3.1-70B-instruct-exp-2-12-2-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}-WD=${WEIGHT_DECAY}-GC=${GRAD_CLIP}"
 
 # run
 mpirun -np $NUM_GPUS \
@@ -110,5 +110,5 @@ mpirun -np $NUM_GPUS \
   --save-sampler-state \
   --use-mpi \
   --wandb-entity "prj-jalm" \
-  --wandb-project "Llama-3.1-8B-Instruct" \
+  --wandb-project "Llama-3.1-70B-Instruct" \
   --wandb-name "${JOB_NAME}"

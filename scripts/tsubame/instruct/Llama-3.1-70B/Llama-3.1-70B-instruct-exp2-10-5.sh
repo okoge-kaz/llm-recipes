@@ -1,7 +1,7 @@
 #!/bin/sh
 #$ -cwd
 #$ -l node_f=16
-#$ -l h_rt=0:0:30:00
+#$ -l h_rt=0:18:30:00
 #$ -o outputs/Llama-3.1-70b-instruct/$JOB_ID.log
 #$ -e outputs/Llama-3.1-70b-instruct/$JOB_ID.log
 #$ -p -5
@@ -94,7 +94,7 @@ mpirun -np $NUM_GPUS \
   --adam-beta1 0.9 \
   --adam-beta2 0.95 \
   --adam-eps 1e-8 \
-  --save-interval 10 \
+  --save-interval 500 \
   --eval-interval 500000 \
   --eval-iters 10 \
   --bf16 \

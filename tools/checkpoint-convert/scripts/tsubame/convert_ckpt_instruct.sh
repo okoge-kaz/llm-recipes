@@ -21,7 +21,7 @@ export HF_HOME="/gs/bs/tga-NII-LLM/.cache"
 # swich virtual env
 source .env/bin/activate
 
-CHECKPOINT_DIR=/gs/bs/tga-NII-LLM/checkpoints/Llama-3.1-8B-Instruct/exp2-10-6/LR_2.5e-5_MINLR_2.5e-6_WD_0.1_GC_1
+CHECKPOINT_DIR=/gs/bs/tga-NII-LLM/checkpoints/Llama-3.1-8B-Instruct/exp2-12-2/LR_2.5e-5_MINLR_2.5e-6_WD_0.1_GC_1
 LATEST_ITERATION=$(cat ${CHECKPOINT_DIR}/latest_iteration.txt)
 
 echo "LATEST_ITERATION=${LATEST_ITERATION}"
