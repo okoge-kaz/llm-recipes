@@ -1,8 +1,8 @@
 #!/bin/bash
-#$ -l rt_AF=2
-#$ -l h_rt=0:1:00:00
+#$ -l rt_AF=64
+#$ -l h_rt=0:0:20:00
 #$ -j y
-#$ -o outputs/Llama-3-8b/
+#$ -o outputs/Llama-3-8b-tflops/
 #$ -cwd
 
 # module load
@@ -50,8 +50,8 @@ done <"$SGE_JOB_HOSTLIST" >"$HOSTFILE_NAME"
 SEQ_LENGTH=8192
 DATA_PARALLEL_SIZE=$NUM_GPUS
 
-MICRO_BATCH_SIZE=1
-GLOBAL_BATCH_SIZE=512
+MICRO_BATCH_SIZE=2
+GLOBAL_BATCH_SIZE=1024
 TRAIN_STEPS=25000
 
 # optimizer config
@@ -65,7 +65,7 @@ GRAD_CLIP=1
 # checkpoint & tokenizer
 TOKENIZER_MODEL=/groups/gag51395/hf-checkpoints/Meta-Llama-3-8B/tokenizer.json
 CHECKPOINT_DIR=/groups/gag51395/hf-checkpoints/Meta-Llama-3-8B
-CHECKPOINT_SAVE_DIR="/bb/llm/gaf51275/checkpoints/Llama-3-8b/LR_${LR}-minLR_${MIN_LR}-WD_${WEIGHT_DECAY}-GC_${GRAD_CLIP}"
+CHECKPOINT_SAVE_DIR="/bb/llm/gaf51275/checkpoints/Llama-3-8b/llm-recipes/LR_${LR}-minLR_${MIN_LR}-WD_${WEIGHT_DECAY}-GC_${GRAD_CLIP}"
 
 mkdir -p ${CHECKPOINT_SAVE_DIR}
 
@@ -74,7 +74,7 @@ mkdir -p ${CHECKPOINT_SAVE_DIR}
 DATA_PATH=""
 
 # ja wikipedia
-DATA_PATH="${DATA_PATH} 1689848183 /bb/llm/gaf51275/binarized/llama-3-default/ja_wiki_text_document"
+DATA_PATH="${DATA_PATH} 1689848183 /bb/llm/gaf51275/datasets/Meta-Llama-3_original_transformers-4.40.1/ja_wiki_merged_text_document"
 
 # job name
 JOB_NAME="Llama-3-ABCI-${NODE_TYPE}-${NUM_NODES}node-${NUM_GPUS}gpu-${SEQ_LENGTH}s-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}-WARMUP=${LR_WARMUP_STEPS}-WD=${WEIGHT_DECAY}-GC=${GRAD_CLIP}"
@@ -97,7 +97,7 @@ mpirun -np $NUM_GPUS \
   --tokenizer-type Llama3Tokenizer \
   --tokenizer-model ${TOKENIZER_MODEL} \
   --data-path ${DATA_PATH} \
-  --split 949,50,1 \
+  --split 990,10,0 \
   --lr ${LR} \
   --min-lr ${MIN_LR} \
   --lr-decay-style cosine \
@@ -110,7 +110,7 @@ mpirun -np $NUM_GPUS \
   --adam-beta2 0.95 \
   --adam-eps 1e-8 \
   --save-interval 500 \
-  --eval-interval 100 \
+  --eval-interval 500 \
   --eval-iters 10 \
   --bf16 \
   --mixed-precision \
@@ -123,5 +123,5 @@ mpirun -np $NUM_GPUS \
   --fsdp-activation-checkpointing \
   --use-mpi \
   --wandb-entity "okoge" \
-  --wandb-project "llm-recipes-test" \
+  --wandb-project "llm-recipes-GTC25" \
   --wandb-name "${JOB_NAME}"
