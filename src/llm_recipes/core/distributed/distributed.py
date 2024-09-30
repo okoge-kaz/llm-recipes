@@ -4,7 +4,6 @@ from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.distributed.optim import ZeroRedundancyOptimizer
 
 from llm_recipes.core.tensor_parallel.automatic_tensor import automatic_tensor_split
-from llm_recipes.core.pipeline_parallel.automatic_pipeline import automatic_pipeline
 
 from megatron_lm.megatron.global_vars import get_args
 
@@ -61,16 +60,7 @@ def init_distributed(
         use_orig_params=True,
     )
 
-    # pipeline parallel
-    pipeline_schedule = automatic_pipeline(
-        model=model,
-        micro_batch_inputs=...,  # TODO: pass micro_batch
-        pipeline_parallel_size=pipeline_parallel_size,
-        args=args,
-        tp_mesh=tp_mesh,
-    )
-
-    return model, pipeline_schedule
+    return model
 
 
 # ref: https://pytorch.org/tutorials/recipes/zero_redundancy_optimizer.html#how-to-use-zeroredundancyoptimizer

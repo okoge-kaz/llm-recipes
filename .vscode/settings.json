@@ -30,6 +30,7 @@
     "frombuffer",
     "fullstate",
     "GELU",
+    "gpipe",
     "gradinet",
     "huggingface",
     "kahan",

@@ -58,7 +58,7 @@ def main() -> None:
     set_global_variables(args=args, build_tokenizer=is_pretraining)
 
     # Set the seeds for reproducibility
-    set_seed(seed=args.seed)
+    set_seed(seed=args.seed)  # TODO add dp_mesh
 
     # Distributed args.
     if args.use_mpi:
