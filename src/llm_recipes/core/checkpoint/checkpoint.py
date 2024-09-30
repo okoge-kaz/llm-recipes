@@ -7,7 +7,7 @@ from torch.distributed.fsdp import (  # noqa: F401
     StateDictType,  # type: ignore
     FullStateDictConfig,  # type:ignore : general model non-sharded, non-flattened params
 )
-import torch.distributed._shard.checkpoint as dist_cp
+import torch.distributed.checkpoint as dist_cp
 from torch.distributed.fsdp.api import FullOptimStateDictConfig
 from torch.distributed.checkpoint.optimizer import load_sharded_optimizer_state_dict
 from pathlib import Path
