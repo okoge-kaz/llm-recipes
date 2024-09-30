@@ -23,6 +23,10 @@ source .env/bin/activate
 # pip version up
 pip install --upgrade pip
 
+# install nightly pytorch
+# ref: https://github.com/pytorch/torchtitan/blob/eef8bb2b1b6f0875ab0581079e1511d51654910e/torchtitan/parallelisms/utils.py#L11-L29
+pip install --pre torch==2.5.0.dev20240912+cu121 --index-url https://download.pytorch.org/whl/nightly/cu121
+
 # pip install requirements
 pip install -r requirements.txt
 
