@@ -176,7 +176,9 @@ def train(
                 for key in batch.keys():
                     batch[key] = batch[key].to(local_rank)
 
-                with torch.cuda.amp.autocast(
+                from torch.amp import autocast  # type: ignore
+                with autocast(
+                    'cuda',
                     enabled=args.mixed_precision,
                     dtype=torch.bfloat16 if args.bf16 else torch.float16
                 ):

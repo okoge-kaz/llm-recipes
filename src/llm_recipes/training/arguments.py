@@ -11,6 +11,7 @@ def parse_args() -> argparse.Namespace:
     parser = _add_regularization_args(parser=parser)
     parser = _add_instruction_tuning_args(parser=parser)
     parser = _add_torch_profiler_args(parser=parser)
+    parser = _add_distributed_args(parser=parser)
 
     args = parser.parse_args()
 
@@ -378,5 +379,16 @@ def _add_torch_profiler_args(parser: argparse.ArgumentParser) -> argparse.Argume
     )
     group.add_argument('--torch-profile-with-modules', action='store_true', help='Record module hierarchy ')
     group.add_argument('--tensorboard-dir', type=str, default=None)
+
+    return parser
+
+
+def _add_distributed_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    group = parser.add_argument_group(title='distributed')
+
+    group.add_argument('--local_rank', type=int, default=0, help='Local rank of the process.')
+    group.add_argument('--world_size', type=int, default=1, help='Number of processes.')
+    group.add_argument('--rank', type=int, default=0, help='Global rank of the process.')
+    group.add_argument('--use-distributed-optimizer', action='store_true', help='Use distributed optimizer.')
 
     return parser

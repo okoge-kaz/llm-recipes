@@ -42,7 +42,7 @@ done <"$PE_HOSTFILE" >"$HOSTFILE_NAME"
 SEQ_LENGTH=8192
 DATA_PARALLEL_SIZE=$NUM_GPUS
 
-MICRO_BATCH_SIZE=2
+MICRO_BATCH_SIZE=1
 GLOBAL_BATCH_SIZE=128
 
 # optimizer config
@@ -52,7 +52,7 @@ WEIGHT_DECAY=0.1
 GRAD_CLIP=1
 
 # checkpoint
-TOKENIZER_DIR=/gs/bs/tga-NII-LLM/hf-checkpoints/Meta-Llama-3-8B-Instruct
+TOKENIZER_DIR=/gs/bs/tga-NII-LLM/hf-checkpoints/Meta-Llama-3-8B-Instruct-pad-token
 CHECKPOINT_DIR=/gs/bs/tga-NII-LLM/swallow-hf/Llama-3-Swallow-8B-v0.1
 CHECKPOINT_SAVE_DIR="/gs/bs/tga-NII-LLM/checkpoints/Llama-3-8B-Instruct-v0.2/LR_${LR}_MINLR_${MIN_LR}_WD_${WEIGHT_DECAY}_GC_${GRAD_CLIP}-dist-ckpt"
 
@@ -94,7 +94,7 @@ mpirun -np $NUM_GPUS \
   --adam-beta1 0.9 \
   --adam-beta2 0.95 \
   --adam-eps 1e-8 \
-  --save-interval 10 \
+  --save-interval 500 \
   --eval-interval 500 \
   --eval-iters 10 \
   --bf16 \
@@ -110,6 +110,6 @@ mpirun -np $NUM_GPUS \
   --save-sampler-state \
   --use-dist-ckpt \
   --use-mpi \
-  --wandb-entity "prj-jalm" \
-  --wandb-project "Llama-3-8B-Instruct-v0.2" \
+  --wandb-entity "okoge" \
+  --wandb-project "llm-recipes" \
   --wandb-name "${JOB_NAME}"

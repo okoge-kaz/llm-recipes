@@ -1,6 +1,9 @@
 import copy
 import os
 import sys
+current_path: str = os.getcwd()
+sys.path.append(f"{current_path}/src")
+
 from datetime import timedelta
 
 import torch
@@ -45,10 +48,6 @@ from llm_recipes.core.fsdp.get_fsdp import get_sharding_strategy
 from llm_recipes.core.precision.precision import preserve_fp32_buffers
 from megatron_lm.megatron.global_vars import set_global_variables
 from llm_recipes.core.distributed.distributed import get_distributed_optimizer
-
-
-current_path: str = os.getcwd()
-sys.path.append(f"{current_path}/llm-recipes/src/")
 
 
 def main() -> None:
@@ -280,7 +279,7 @@ def main() -> None:
             weight_decay=args.weight_decay,
         )
     else:
-        optimizer = optim.adamw.AdamW(
+        optimizer = optim.AdamW(  # type: ignore
             model.parameters(),  # type: ignore
             lr=args.lr,
             betas=(args.adam_beta1, args.adam_beta2),
