@@ -20,7 +20,7 @@ set -e
 # swich virtual env
 source .env/bin/activate
 
-INFERENCE_MODEL_DIR=/bb/llm/gaf51275/2024/checkpoints/pytorch-to-hf/Llama-3.1-8B-Instruct/exp2-4/LR_1e-6_MINLR_1e-7_WD_0.1_GC_1/iter_0004000
+INFERENCE_MODEL_DIR=/bb/llm/gaf51275/2024/checkpoints/pytorch-to-hf/Llama-3.1-70B-Instruct/exp1/LR_2.5e-5_MINLR_2.5e-6_WD_0.1_GC_1/iter_0005490
 
 python tools/inference/inference.py \
   --model-path $INFERENCE_MODEL_DIR \

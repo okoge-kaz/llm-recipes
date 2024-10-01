@@ -21,15 +21,15 @@ export HF_HOME="/groups/gag51395/.cache/huggigface"
 # swich virtual env
 source .env/bin/activate
 
-CHECKPOINT_DIR=/bb/llm/gaf51275/2024/checkpoints/Llama-3.1-8B-Instruct/exp2-1/LR_2.5e-5_MINLR_2.5e-6_WD_0.1_GC_1
+CHECKPOINT_DIR=/bb/llm/gaf51275/checkpoints/Llama-3.1-70B-Instruct/exp1/LR_2.5e-5_MINLR_2.5e-6_WD_0.1_GC_1
 LATEST_ITERATION=$(cat ${CHECKPOINT_DIR}/latest_iteration.txt)
 
 echo "LATEST_ITERATION=${LATEST_ITERATION}"
 
-BASE_MODEL_CHECKPOINT=/bb/llm/gaf51275/hf-checkpoints/Meta-Llama-3.1-8B-Instruct
+BASE_MODEL_CHECKPOINT=/bb/llm/gaf51275/hf-checkpoints/Meta-Llama-3.1-70B-Instruct
 TOKENIZER_DIR=/groups/gag51395/hf-checkpoints/Meta-Llama-3-8B-Instruct
-OUTPUT_DIR=/bb/llm/gaf51275/2024/checkpoints/pytorch-to-hf/Llama-3.1-8B-Instruct/
-EXTRACTED_PATH=$(echo $CHECKPOINT_DIR | awk -F'/Llama-3.1-8B-Instruct/' '{print $2}')
+OUTPUT_DIR=/bb/llm/gaf51275/2024/checkpoints/pytorch-to-hf/Llama-3.1-70B-Instruct/
+EXTRACTED_PATH=$(echo $CHECKPOINT_DIR | awk -F'/Llama-3.1-70B-Instruct/' '{print $2}')
 OUTPUT_DIR="${OUTPUT_DIR}${EXTRACTED_PATH}"
 
 echo "convert ${CHECKPOINT_DIR} to ${OUTPUT_DIR}"
@@ -78,7 +78,7 @@ upload_checkpoint() {
 }
 
 EXP_NAME=$(echo $EXTRACTED_PATH | sed 's/\//-/g')
-HF_REPO_NAME="tokyotech-llm/Llama-3.1-8B-Instruct-${EXP_NAME}-${FORMATTED_ITERATION}"
+HF_REPO_NAME="tokyotech-llm/Llama-3.1-70B-Instruct-${EXP_NAME}-${FORMATTED_ITERATION}"
 
 echo "upload ${OUTPUT_PATH} to ${HF_REPO_NAME}"
 
