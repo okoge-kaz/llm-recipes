@@ -102,6 +102,11 @@ mpirun -np $NUM_GPUS \
   --base-model ${CHECKPOINT_DIR} \
   --save ${CHECKPOINT_SAVE_DIR} \
   --load ${CHECKPOINT_SAVE_DIR} \
+  --use-3d-parallelism \
+  --tensor-parallel-size 2 \
+  --pipeline-parallel-size 1 \
+  --pipeline-parallel-schedule '1f1b' \
+  --data-parallel-sharding-size 4 \
   --low-cpu-fsdp \
   --sharding-strategy FULL_SHARD \
   --checkpoint-type LOCAL_STATE_DICT \

@@ -145,34 +145,44 @@ def main() -> None:
         model_name=args.base_model,
     )
 
-    from torch.distributed._tensor.device_mesh import init_device_mesh  # type: ignore
-    device_mesh = init_device_mesh(device_type="cuda", mesh_shape=(world_size, ))
+    if args.use_3d_parallelism:
+        from llm_recipes.core.distributed.distributed import init_distributed
+        from llm_recipes.core.pipeline_parallel.automatic_pipeline import build_pipeline_schedule
 
-    model = FSDP(
-        model,  # type: ignore
-        auto_wrap_policy=wrapping_policy,
-        cpu_offload=CPUOffload(offload_params=True) if args.fsdp_cpu_offload else None,
-        mixed_precision=mixed_precision_policy,
-        sharding_strategy=get_sharding_strategy(),
-        device_id=torch.cuda.current_device(),
-        limit_all_gathers=True,
-        sync_module_states=args.low_cpu_fsdp,
-        param_init_fn=lambda module: module.to_empty(  # type: ignore
-            device=torch.cuda.current_device(), recurse=False,  # type: ignore
+        # validation
+        model_parallel_size = args.tensor_parallel_size * args.pipeline_parallel_size
+        assert world_size % model_parallel_size == 0, "world_size must be divisible by model_parallel_size"
+        assert (world_size // model_parallel_size) % args.data_parallel_sharding_size == 0, "data_parallel_size must be divisible by data_parallel_sharding_size"
+
+        num_layers: int = model.config.num_hidden_layers
+        num_attention_heads: int = model.config.num_attention_heads
+        assert num_layers % args.pipeline_parallel_size == 0, "num_layers must be divisible by pipeline_parallel_size"
+        assert num_attention_heads % args.tensor_parallel_size == 0, "num_attention_heads must be divisible by tensor_parallel_size"
+        vocab_size: int = model.config.vocab_size
+        assert vocab_size % args.tensor_parallel_size == 0, "vocab_size must be divisible by tensor_parallel_size"
+
+        model, device_mesh = init_distributed(
+            model=model,
+            rank=rank,
+            world_size=world_size,
+            tensor_parallel_size=args.tensor_parallel_size,
+            pipeline_parallel_size=args.pipeline_parallel_size,
+            data_parallel_sharding_size=args.data_parallel_sharding_size,
         )
-        if args.low_cpu_fsdp and rank != 0
-        else None,
-        device_mesh=device_mesh,
-    )
-    if args.fsdp_activation_checkpointing:
-        # ref: https://github.com/meta-llama/llama-recipes/blob/778e31e35cfbe385a31b3a94b794e3f75e276d1a/src/llm_recipes/finetuning.py#L193-L195
-        # model.enable_input_require_grads()
-        # model.gradient_checkpointing_enable()
-        apply_fsdp_checkpointing(model=model, model_name=args.base_model)
+        # pipeline_schedule = build_pipeline_schedule(
+        #     pipeline_stage=pipeline_stage,
+        #     n_micro_batches=args.global_batch_size // args.micro_batch_size // args.data_parallel_size,
+        # )
 
-    if args.direct_preference_optimization:
-        reference_model = FSDP(
-            reference_model,  # type: ignore
+        if args.direct_preference_optimization:
+            raise ValueError("3D parallelism is not supported for direct preference optimization")
+
+    else:
+        from torch.distributed._tensor.device_mesh import init_device_mesh  # type: ignore
+        device_mesh = init_device_mesh(device_type="cuda", mesh_shape=(world_size, ))
+
+        model = FSDP(
+            model,  # type: ignore
             auto_wrap_policy=wrapping_policy,
             cpu_offload=CPUOffload(offload_params=True) if args.fsdp_cpu_offload else None,
             mixed_precision=mixed_precision_policy,
@@ -185,7 +195,30 @@ def main() -> None:
             )
             if args.low_cpu_fsdp and rank != 0
             else None,
+            device_mesh=device_mesh,
         )
+        if args.fsdp_activation_checkpointing:
+            # ref: https://github.com/meta-llama/llama-recipes/blob/778e31e35cfbe385a31b3a94b794e3f75e276d1a/src/llm_recipes/finetuning.py#L193-L195
+            # model.enable_input_require_grads()
+            # model.gradient_checkpointing_enable()
+            apply_fsdp_checkpointing(model=model, model_name=args.base_model)
+
+        if args.direct_preference_optimization:
+            reference_model = FSDP(
+                reference_model,  # type: ignore
+                auto_wrap_policy=wrapping_policy,
+                cpu_offload=CPUOffload(offload_params=True) if args.fsdp_cpu_offload else None,
+                mixed_precision=mixed_precision_policy,
+                sharding_strategy=get_sharding_strategy(),
+                device_id=torch.cuda.current_device(),
+                limit_all_gathers=True,
+                sync_module_states=args.low_cpu_fsdp,
+                param_init_fn=lambda module: module.to_empty(  # type: ignore
+                    device=torch.cuda.current_device(), recurse=False,  # type: ignore
+                )
+                if args.low_cpu_fsdp and rank != 0
+                else None,
+            )
 
     if not args.instruction_tuning and not args.direct_preference_optimization:
         args.continual_pretraining = True
@@ -202,11 +235,11 @@ def main() -> None:
             args.iteration // args.eval_interval) * args.eval_iters
 
         train_dataloader = build_pretraining_data_loader(
-            dataset=train_dataset,
+            dataset=train_dataset,  # type: ignore
             consumed_samples=args.consumed_train_samples,
         )
         validation_dataloader = build_pretraining_data_loader(
-            dataset=validation_dataset,
+            dataset=validation_dataset,  # type: ignore
             consumed_samples=args.consumed_valid_samples,
         )
 

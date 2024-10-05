@@ -1,6 +1,6 @@
 import torch
 from torch.distributed.device_mesh import DeviceMesh
-from torch.distributed._tensor import Shard, Replicate
+from torch.distributed.tensor.placement_types import Shard, Replicate
 from torch.distributed.tensor.parallel import (
     parallelize_module,
     ColwiseParallel,
@@ -26,19 +26,19 @@ def automatic_tensor_split(
         module=model,
         device_mesh=tp_mesh,
         parallelize_plan={
-            "embed_tokens": RowwiseParallel(
+            "model.embed_tokens": RowwiseParallel(
                 input_layouts=Replicate(),
                 output_layouts=Shard(1),
             ),
-            "norm": SequenceParallel(),
-            "lm_head": ColwiseParallel(
+            "model.norm": SequenceParallel(),
+            "model.lm_head": ColwiseParallel(
                 input_layouts=Shard(1),
                 output_layouts=Replicate()
             ),
         }
     )
 
-    for layer_id, transformer_block in enumerate(model.layers):
+    for layer_id, transformer_block in enumerate(model.model.layers):
         # MLP: hf <-> pytorch
         # pytorch: https://github.com/pytorch/examples/blob/cdef4d43fb1a2c6c4349daa5080e4e8731c34569/distributed/tensor_parallelism/llama2_model.py#L267
         # hf: https://github.com/huggingface/transformers/blob/78b2929c0554b79e0489b451ce4ece14d265ead2/src/transformers/models/llama/modeling_llama.py#L310
@@ -71,7 +71,7 @@ def automatic_tensor_split(
         attn_layer.num_key_value_heads  = attn_layer.num_key_value_heads  // tp_mesh.size()
 
         # Custom parallelization plan for the model
-        parallelize_module(
+        transformer_block = parallelize_module(
             module=transformer_block,
             device_mesh=tp_mesh,
             parallelize_plan=layer_tp_plan

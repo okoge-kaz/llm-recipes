@@ -49,7 +49,7 @@ def build_pipeline_schedule(
 # ref: https://github.com/pytorch/PiPPy/blob/main/examples/llama/pippy_llama.py
 def split_model(
         model: torch.nn.Module,
-        micro_batch_inputs: list[dict[str, torch.Tensor]],
+        micro_batch_inputs: dict[str, torch.Tensor],
         pipeline_parallel_size: int,
         args: argparse.Namespace,
         pp_mesh: DeviceMesh,
@@ -71,9 +71,10 @@ def split_model(
 
         pipe = pipeline(
             module=model,
-            mb_args=(micro_batch_inputs,),  # TODO: check micro batch input
+            mb_args=(micro_batch_inputs["input_ids"],),
             split_spec=split_spec,
         )
+        print(f"Pipeline: {pipe}", flush=True)
 
         device = torch.device(f"cuda:{rank % torch.cuda.device_count()}")
         stage = pipe.build_stage(
@@ -85,7 +86,7 @@ def split_model(
         assert args.global_batch_size % args.micro_batch_size == 0
         assert args.global_batch_size // args.micro_batch_size % args.data_parallel_size == 0
 
-        return stage, model
+        return stage, pipe
 
     else:
         raise ValueError("Distributed training is not initialized")

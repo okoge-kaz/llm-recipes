@@ -390,5 +390,16 @@ def _add_distributed_args(parser: argparse.ArgumentParser) -> argparse.ArgumentP
     group.add_argument('--world_size', type=int, default=1, help='Number of processes.')
     group.add_argument('--rank', type=int, default=0, help='Global rank of the process.')
     group.add_argument('--use-distributed-optimizer', action='store_true', help='Use distributed optimizer.')
+    group.add_argument('--use-3d-parallelism', action='store_true', help='Use 3D parallelism.')
+    group.add_argument('--tensor-parallel-size', type=int, default=1, help='Size of the tensor parallelism.')
+    group.add_argument(
+        '--pipeline-parallel-size', type=int, default=1, help='Size of the pipeline parallelism.'
+    )
+    group.add_argument(
+        '--pipeline-parallel-schedule', type=str, choices=['1f1b', 'gpipe', 'interleaved_1f1b'], default='1f1b',
+    )
+    group.add_argument(
+        '--data-parallel-sharding-size', type=int, default=1, help='Size of the data parallelism sharding.'
+    )
 
     return parser
