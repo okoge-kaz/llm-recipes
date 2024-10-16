@@ -21,24 +21,21 @@ export HF_HOME="/groups/gag51395/.cache/huggigface"
 # swich virtual env
 source .env/bin/activate
 
-CHECKPOINT_DIR=/bb/llm/gaf51275/checkpoints/llm-recipes/Llama-3.2-3B-Instruct/LR_2.5E-5_minLR_2.5E-6_WD_0.1_GC_1
+CHECKPOINT_DIR=/bb/llm/gaf51275/2024/checkpoints/Llama-3.1-8B-Instruct/exp2-18/LR_2.5e-5_MINLR_2.5e-6_WD_0.1_GC_1/
 LATEST_ITERATION=$(cat ${CHECKPOINT_DIR}/latest_iteration.txt)
 
 echo "LATEST_ITERATION=${LATEST_ITERATION}"
 
-ITERATION=50000
-echo > ${CHECKPOINT_DIR}/latest_iteration.txt
-
-BASE_MODEL_CHECKPOINT=/bb/llm/gaf51275/hf-checkpoints/Llama-3.2-3B
-TOKENIZER_DIR=/bb/llm/gaf51275/hf-checkpoints/Llama-3.2-3B
-OUTPUT_DIR=/bb/llm/gaf51275/2024/checkpoints/pytorch-to-hf/Llama-3.2-3B/from-instruct
-EXTRACTED_PATH=$(echo $CHECKPOINT_DIR | awk -F'/Llama-3.2-3B/' '{print $2}')
+BASE_MODEL_CHECKPOINT=/bb/llm/gaf51275/hf-checkpoints/Meta-Llama-3.1-8B-Instruct
+TOKENIZER_DIR=/groups/gag51395/hf-checkpoints/Meta-Llama-3-8B-Instruct
+OUTPUT_DIR=/bb/llm/gaf51275/2024/checkpoints/pytorch-to-hf/Llama-3.1-8B-Instruct/
+EXTRACTED_PATH=$(echo $CHECKPOINT_DIR | awk -F'/Llama-3.1-8B-Instruct/' '{print $2}')
 OUTPUT_DIR="${OUTPUT_DIR}${EXTRACTED_PATH}"
 
 echo "convert ${CHECKPOINT_DIR} to ${OUTPUT_DIR}"
 mkdir -p $OUTPUT_DIR
 
-ITERATION=$ITERATION
+ITERATION=$LATEST_ITERATION
 FORMATTED_ITERATION=$(printf "iter_%07d" $ITERATION)
 
 CHECK_POINT_PATH=${CHECKPOINT_DIR}/${FORMATTED_ITERATION}/model.pt
@@ -55,8 +52,6 @@ python tools/checkpoint-convert/convert_ckpt.py \
   --pytorch-model-checkpoint-path $CHECK_POINT_PATH \
   --out $OUTPUT_PATH \
   --sequence-length 8192
-
-echo $LATEST_ITERATION > ${CHECKPOINT_DIR}/latest_iteration.txt
 
 # upload
 upload_checkpoint() {
@@ -83,7 +78,7 @@ upload_checkpoint() {
 }
 
 EXP_NAME=$(echo $EXTRACTED_PATH | sed 's/\//-/g')
-HF_REPO_NAME="tokyotech-llm/Llama-3.2-3B-from-instruct-LR_2.5E-5_minLR_2.5E-6_WD_0.1_GC_1-${FORMATTED_ITERATION}"
+HF_REPO_NAME="tokyotech-llm/Llama-3.1-8B-Instruct-${EXP_NAME}${FORMATTED_ITERATION}"
 
 echo "upload ${OUTPUT_PATH} to ${HF_REPO_NAME}"
 

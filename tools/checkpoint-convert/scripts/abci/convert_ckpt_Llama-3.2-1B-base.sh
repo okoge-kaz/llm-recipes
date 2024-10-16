@@ -21,7 +21,7 @@ export HF_HOME="/groups/gag51395/.cache/huggigface"
 # swich virtual env
 source .env/bin/activate
 
-CHECKPOINT_DIR=/bb/llm/gaf51275/checkpoints/llm-recipes/Llama-3.2-1B/LR_2.5E-5_minLR_2.5E-6_WD_0.1_GC_1
+CHECKPOINT_DIR=/bb/llm/gaf51275/checkpoints/llm-recipes/Llama-3.2-1B-Instruct/LR_4E-5_minLR_4E-6_WD_0.1_GC_1/
 LATEST_ITERATION=$(cat ${CHECKPOINT_DIR}/latest_iteration.txt)
 
 echo "LATEST_ITERATION=${LATEST_ITERATION}"
@@ -31,7 +31,7 @@ echo > ${CHECKPOINT_DIR}/latest_iteration.txt
 
 BASE_MODEL_CHECKPOINT=/bb/llm/gaf51275/hf-checkpoints/Llama-3.2-1B
 TOKENIZER_DIR=/bb/llm/gaf51275/hf-checkpoints/Llama-3.2-1B
-OUTPUT_DIR=/bb/llm/gaf51275/2024/checkpoints/pytorch-to-hf/Llama-3.2-1B/from-base/
+OUTPUT_DIR=/bb/llm/gaf51275/2024/checkpoints/pytorch-to-hf/Llama-3.2-1B/from-instruct
 EXTRACTED_PATH=$(echo $CHECKPOINT_DIR | awk -F'/Llama-3.2-1B/' '{print $2}')
 OUTPUT_DIR="${OUTPUT_DIR}${EXTRACTED_PATH}"
 
@@ -82,8 +82,8 @@ upload_checkpoint() {
   return 1
 }
 
-EXP_NAME=$(echo $EXTRACTED_PATH | sed 's/\//-/g')
-HF_REPO_NAME="tokyotech-llm/Llama-3.2-1B-from-base-${EXP_NAME}-${FORMATTED_ITERATION}"
+EXP_NAME=$EXTRACTED_PATH
+HF_REPO_NAME="tokyotech-llm/Llama-3.2-1B-from-instruct-LR_4E-5_minLR_4E-6_WD_0.1_GC_1-${FORMATTED_ITERATION}"
 
 echo "upload ${OUTPUT_PATH} to ${HF_REPO_NAME}"
 
