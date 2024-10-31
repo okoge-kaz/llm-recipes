@@ -1,6 +1,6 @@
 #!/bin/bash
-#$ -l rt_AF=8
-#$ -l h_rt=0:7:00:00
+#$ -l rt_AF=16
+#$ -l h_rt=0:02:50:00
 #$ -j y
 #$ -o outputs/instruction/Llama-3.1-Swallow-8B-v0.2/
 #$ -cwd
@@ -61,8 +61,8 @@ GRAD_CLIP=1
 
 # checkpoint
 TOKENIZER_DIR=/groups/gag51395/hf-checkpoints/Meta-Llama-3-8B-Instruct
-CHECKPOINT_DIR=/bb/llm/gaf51275/2024/checkpoints/megatron-to-hf/Llama-3.1-8b-instruct/tp4-pp1/iter_0030000
-CHECKPOINT_SAVE_DIR="/bb/llm/gaf51275/2024/checkpoints/Llama-3.1-8B-Instruct/exp3-1/LR_${LR}_MINLR_${MIN_LR}_WD_${WEIGHT_DECAY}_GC_${GRAD_CLIP}"
+CHECKPOINT_DIR=/bb/llm/gaf51275/2024/checkpoints/megatron-to-hf/Llama-3.1-swallow-8b-v0.2/tp4-pp1/iter_0030000
+CHECKPOINT_SAVE_DIR="/bb/llm/gaf51275/2024/checkpoints/Llama-3.1-8B-Instruct/exp3-3/LR_${LR}_MINLR_${MIN_LR}_WD_${WEIGHT_DECAY}_GC_${GRAD_CLIP}"
 
 mkdir -p ${CHECKPOINT_SAVE_DIR}
 
@@ -73,7 +73,7 @@ TRAIN_DATA_PATH=${DATASET_DIR}/train.jsonl
 VALID_DATA_PATH=${DATASET_DIR}/train.jsonl
 
 # job name
-JOB_NAME="Llama-3.1-8B-instruct-exp-3-1-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}-WD=${WEIGHT_DECAY}-GC=${GRAD_CLIP}"
+JOB_NAME="Llama-3.1-8B-instruct-exp-3-3-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}-WD=${WEIGHT_DECAY}-GC=${GRAD_CLIP}"
 
 # run
 mpirun -np $NUM_GPUS \
