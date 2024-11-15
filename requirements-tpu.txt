@@ -1,0 +1,16 @@
+torch
+torch_xla
+
+
+transformers>=4.44.0
+datasets
+accelerate
+peft
+sentencepiece
+wandb
+# mpi4py
+
+# megatron-lm
+nltk
+pybind11
+
