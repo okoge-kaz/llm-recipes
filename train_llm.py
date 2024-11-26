@@ -146,6 +146,7 @@ def main() -> None:
     )
 
     if args.use_3d_parallelism:
+        raise ValueError("3D parallelism is not supported for now")
         from llm_recipes.core.distributed.distributed import init_distributed
         from llm_recipes.core.pipeline_parallel.automatic_pipeline import build_pipeline_schedule
 
@@ -300,6 +301,7 @@ def main() -> None:
             raise ValueError("unknown training mode")
 
     if args.use_distributed_optimizer:
+        raise ValueError("Distributed optimizer is not supported for now")
         assert args.use_3d_parallelism is True, "3D parallelism must be enabled for distributed optimizer"
         assert args.use_fsdp is False, "FSDP must be disabled for distributed optimizer"
 

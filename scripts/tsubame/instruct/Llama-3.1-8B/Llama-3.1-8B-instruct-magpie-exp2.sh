@@ -15,7 +15,7 @@ module load ylab/nccl/cuda-12.2/2.20.5
 module load ylab/hpcx/2.17.1
 module load ninja/1.11.1
 
-# swich virtual env
+# switch virtual env
 source .env/bin/activate
 
 # distributed settings

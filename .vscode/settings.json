@@ -66,6 +66,7 @@
     "tensorboard",
     "tflops",
     "tobytes",
-    "Xformer"
+    "Xformer",
+    "ylab"
   ]
 }

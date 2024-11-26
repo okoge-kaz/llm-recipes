@@ -1,7 +1,7 @@
 #!/bin/sh
 #$ -cwd
-#$ -l node_f=2
-#$ -l h_rt=0:1:00:00
+#$ -l node_f=1
+#$ -l h_rt=0:0:30:00
 #$ -o outputs/Llama-3-8b-instruct/$JOB_ID.log
 #$ -e outputs/Llama-3-8b-instruct/$JOB_ID.log
 #$ -p -5
@@ -15,7 +15,7 @@ module load ylab/nccl/cuda-12.2/2.20.5
 module load ylab/hpcx/2.17.1
 module load ninja/1.11.1
 
-# swich virtual env
+# switch virtual env
 source .env/bin/activate
 
 # distributed settings
@@ -102,11 +102,6 @@ mpirun -np $NUM_GPUS \
   --base-model ${CHECKPOINT_DIR} \
   --save ${CHECKPOINT_SAVE_DIR} \
   --load ${CHECKPOINT_SAVE_DIR} \
-  --use-3d-parallelism \
-  --tensor-parallel-size 2 \
-  --pipeline-parallel-size 1 \
-  --pipeline-parallel-schedule '1f1b' \
-  --data-parallel-sharding-size 4 \
   --low-cpu-fsdp \
   --sharding-strategy FULL_SHARD \
   --checkpoint-type LOCAL_STATE_DICT \
