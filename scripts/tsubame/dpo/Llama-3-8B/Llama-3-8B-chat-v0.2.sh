@@ -77,7 +77,7 @@ mpirun -np $NUM_GPUS \
   -x LD_LIBRARY_PATH \
   -x PATH \
   -bind-to none \
-  python examples/finetuning.py \
+  python train_llm.py \
   --seq-length ${SEQ_LENGTH} \
   --micro-batch-size ${MICRO_BATCH_SIZE} \
   --global-batch-size ${GLOBAL_BATCH_SIZE} \

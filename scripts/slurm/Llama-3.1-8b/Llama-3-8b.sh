@@ -75,7 +75,7 @@ mpirun -np $NUM_GPUS \
   -x NCCL_IB_TIMEOUT=22 \
   -x LD_LIBRARY_PATH \
   -x PATH \
-  python examples/finetuning.py \
+  python train_llm.py \
   --seq-length ${SEQ_LENGTH} \
   --sliding-window-size ${SEQ_LENGTH} \
   --micro-batch-size ${MICRO_BATCH_SIZE} \

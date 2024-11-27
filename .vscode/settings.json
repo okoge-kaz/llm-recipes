@@ -20,6 +20,7 @@
     "bettertransformer",
     "Codestral",
     "colour",
+    "Colwise",
     "Concatenator",
     "detokenize",
     "detokenizer",
@@ -29,11 +30,14 @@
     "frombuffer",
     "fullstate",
     "GELU",
+    "gpipe",
     "gradinet",
     "huggingface",
     "kahan",
     "kotoba",
+    "layernorm",
     "memtrace",
+    "microbatches",
     "Mixtral",
     "MMIDIDX",
     "multimodal",
@@ -51,6 +55,7 @@
     "probs",
     "psutil",
     "pubmed",
+    "Rowwise",
     "samsum",
     "seqyebce",
     "Sharded",
@@ -61,6 +66,7 @@
     "tensorboard",
     "tflops",
     "tobytes",
-    "Xformer"
+    "Xformer",
+    "ylab"
   ]
 }

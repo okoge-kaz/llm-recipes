@@ -1,6 +1,3 @@
---find-links https://download.pytorch.org/whl/cu124
-torch==2.4.1
-
 # huggingface
 transformers>=4.44.0
 datasets
