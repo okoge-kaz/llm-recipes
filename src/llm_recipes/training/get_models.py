@@ -93,9 +93,8 @@ def get_model(
             model_name,
             load_in_8bit=True if args.quantization else None,
             device_map="auto" if args.quantization else None,
-            use_cache=use_cache,
+            use_cache=True,
             max_position_embeddings=args.seq_length,
-            attn_implementation="flash_attention_2",
             torch_dtype=torch.bfloat16 if args.bf16 else torch.float16,
         )
 
