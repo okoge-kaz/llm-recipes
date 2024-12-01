@@ -46,8 +46,8 @@ GLOBAL_BATCH_SIZE=256
 TRAIN_STEPS=25000
 
 # optimizer config
-LR=2.5e-5
-MIN_LR=2.5e-6
+LR=5.0e-5
+MIN_LR=5.0e-6
 LR_WARMUP_STEPS=1000
 LR_DECAY_STEPS=$TRAIN_STEPS
 WEIGHT_DECAY=0.1
@@ -56,7 +56,7 @@ GRAD_CLIP=1
 # checkpoint
 TOKENIZER_PATH=/gs/bs/tga-NII-LLM/hf-checkpoints/gemma-2-2b/tokenizer.model
 CHECKPOINT_DIR=/gs/bs/tga-NII-LLM/hf-checkpoints/gemma-2-2b
-CHECKPOINT_SAVE_DIR="/gs/bs/tgh-24IDU/checkpoints/gemma-2-2b/exp1/LR_${LR}_MINLR_${MIN_LR}_WD_${WEIGHT_DECAY}_GC_${GRAD_CLIP}"
+CHECKPOINT_SAVE_DIR="/gs/bs/tgh-24IDU/checkpoints/gemma-2-2b/exp2/LR_${LR}_MINLR_${MIN_LR}_WD_${WEIGHT_DECAY}_GC_${GRAD_CLIP}"
 
 mkdir -p ${CHECKPOINT_SAVE_DIR}
 
@@ -115,7 +115,7 @@ TRAIN_DATA_PATH="${TRAIN_DATA_PATH} 12937299736 /gs/fs/jh160041/datasets/Swallow
 TRAIN_DATA_PATH="${TRAIN_DATA_PATH} 19062700264 /gs/fs/jh160041/datasets/Swallow/binarized/gemma-2_original_transformers-4.45.2/bigcode/the-stack-v2-train-smol-ids/random_sample0.1_merge/the-stack-v2-train-smol-ids-01_text_document"
 
 # job name
-JOB_NAME="Gemma-2-2b-Exp-1-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}-WD=${WEIGHT_DECAY}-GC=${GRAD_CLIP}"
+JOB_NAME="Gemma-2-2b-Exp-2-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}-WD=${WEIGHT_DECAY}-GC=${GRAD_CLIP}"
 
 # run
 mpirun -np $NUM_GPUS \
