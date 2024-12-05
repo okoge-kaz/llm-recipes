@@ -25,8 +25,8 @@ for ((i = start; i <= end; i += increment)); do
   ITERATION=$i
   FORMATTED_ITERATION=$(printf "iter_%07d" $ITERATION)
 
-  CHECK_POINT_PATH=/gs/bs/tgh-24IDU/checkpoints/gemma-2-2b/exp2/LR_5.0e-5_MINLR_5.0e-6_WD_0.1_GC_1/${FORMATTED_ITERATION}/model.pt
-  OUTPUT_PATH=/gs/bs/tgh-24IDU/checkpoints/fsdp-to-hf/gemma-2-2b/exp2/LR_5.0e-5_MINLR_5.0e-6_WD_0.1_GC_1/${FORMATTED_ITERATION}
+  CHECK_POINT_PATH=/gs/bs/tgh-24IDU/checkpoints/gemma-2-2b/exp1/LR_2.5e-5_MINLR_2.5e-6_WD_0.1_GC_1/${FORMATTED_ITERATION}/model.pt
+  OUTPUT_PATH=/gs/bs/tgh-24IDU/checkpoints/fsdp-to-hf/gemma-2-2b/exp1/LR_2.5e-5_MINLR_2.5e-6_WD_0.1_GC_1/${FORMATTED_ITERATION}
 
   echo "convert ${CHECK_POINT_PATH} to ${OUTPUT_PATH}"
 
