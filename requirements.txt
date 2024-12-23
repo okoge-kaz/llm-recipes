@@ -1,30 +1,16 @@
-# huggingface
 transformers>=4.44.0
 datasets
 accelerate
-peft
+safetensors
 
-appdirs
-loralib
-scipy
-py7zr
-bitsandbytes
-fire
-
-black
-flake8
-
-# tokenizer
 sentencepiece
+nltk
 
-# logging
 wandb
-
-# multi node
-deepspeed
 mpi4py
 
-# megatron-lm
-nltk
 pybind11
 
+six
+regex
+numpy
