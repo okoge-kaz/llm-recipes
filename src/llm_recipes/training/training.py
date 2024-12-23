@@ -35,6 +35,9 @@ def parse_skip_batch(args: list[int]) -> list[tuple[int, int]]:
     return [(int(args[i]), int(args[i + 1])) for i in range(0, len(args), 2)]
 
 
+IGNORE_INDEX = -100
+
+
 def train(
     model,
     train_dataloader,
@@ -80,7 +83,6 @@ def train(
     real_seq_len: int = args.seq_length
 
     # cyclic iter
-    train_dataloader = iter(cyclic_iter(train_dataloader))
     eval_dataloader = iter(cyclic_iter(eval_dataloader))
 
     # skip batch
@@ -120,13 +122,16 @@ def train(
 
     while iteration < args.train_iters:
         iteration_start_time = time.perf_counter()
+        if iteration % (args.instruction_dataset_size // args.global_batch_size) == 0:
+            train_dataloader.sampler.set_epoch((iteration // (args.instruction_dataset_size // args.global_batch_size)))
+            train_iter = iter(train_dataloader)
 
         model.train()
         total_loss: float = 0.0
 
         for _ in range(gradient_accumulation_steps):
 
-            batch = next(train_dataloader)
+            batch = next(train_iter)
 
             if args.direct_preference_optimization:
                 # DPO( Direct Preference Optimization)
@@ -175,6 +180,11 @@ def train(
                 # continual-pre-training & Instruction Tuning
                 for key in batch.keys():
                     batch[key] = batch[key].to(local_rank)
+                if args.instruction_tuning:
+                    # for gradient accumulation
+                    # related PR: https://github.com/huggingface/transformers/pull/34191
+                    num_tokens_in_batch = (batch["labels"] != IGNORE_INDEX).sum().item()
+                    batch["num_items_in_batch"] = torch.tensor(num_tokens_in_batch).to(local_rank)
 
                 from torch.amp import autocast  # type: ignore
                 with autocast(
