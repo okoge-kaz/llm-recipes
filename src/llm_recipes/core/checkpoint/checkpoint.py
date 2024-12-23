@@ -1,7 +1,6 @@
 import time
 import torch
 import torch.distributed as torch_distributed
-from torch.utils.data.distributed import DistributedSampler
 from torch.distributed.fsdp import (  # noqa: F401
     FullyShardedDataParallel as FSDP,  # type: ignore
     StateDictType,  # type: ignore
@@ -14,7 +13,7 @@ from pathlib import Path
 import os
 import gc
 
-from megatron_lm.megatron.global_vars import get_args, get_sampler
+from megatron_lm.megatron.global_vars import get_args
 
 
 def get_local_model_state_dict(model: FSDP) -> dict[str, torch.Tensor]:
@@ -97,13 +96,6 @@ def save_scheduler_state_dict(scheduler: torch.optim.lr_scheduler.LRScheduler, p
         print(f"Saved scheduler state dict to {path}")
 
 
-def save_sampler_state_dict(sampler: DistributedSampler, path: str) -> None:
-    if torch_distributed.get_rank() == 0:
-        print(f"Saving sampler indices to {path}")
-        torch.save(sampler.state_dict(), path)  # type: ignore
-        print(f"Saved sampler indices to {path}")
-
-
 def save_rng_state(path: str) -> None:
     # PyTorch
     torch_cpu_rng_state = torch.get_rng_state()
@@ -160,14 +152,6 @@ def save_checkpoint(
                 optimizer=optimizer,
                 path=f"{checkpoint_path}/optimizer.pt",
             )
-
-    if args.save_sampler_state:
-        sampler = get_sampler()
-
-        save_sampler_state_dict(
-            sampler=sampler,
-            path=f"{checkpoint_path}/sampler.pt",
-        )
 
     save_scheduler_state_dict(
         scheduler=scheduler,
@@ -309,17 +293,6 @@ def load_scheduler_state_dict(scheduler: torch.optim.lr_scheduler.LRScheduler, p
     latest_checkpoint_path: str = get_checkpoint_name(path, latest_iteration)
     state_dict = torch.load(f"{latest_checkpoint_path}/scheduler.pt", map_location="cpu")
     scheduler.load_state_dict(state_dict)
-    del state_dict
-
-
-def load_sampler_state_dict(sampler: DistributedSampler, path: str) -> None:
-    latest_iteration: int = get_latest_iteration(path)
-    if latest_iteration == 0:
-        return
-
-    latest_checkpoint_path: str = get_checkpoint_name(path, latest_iteration)
-    state_dict = torch.load(f"{latest_checkpoint_path}/sampler.pt", map_location="cpu")
-    sampler.load_state_dict(state_dict)  # type: ignore
     del state_dict
 
 

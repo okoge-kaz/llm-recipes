@@ -178,8 +178,7 @@ def get_instruction_tuning_dataloader(
     data_path: str,
     train: bool = False,
 ) -> DataLoader:
-    from llm_recipes.core.dataset.sequence_length_warmup import CustomDistributedSampler
-    from llm_recipes.core.checkpoint.checkpoint import load_sampler_state_dict
+    from torch.utils.data.distributed import DistributedSampler
 
     args = get_args()
 
@@ -192,16 +191,13 @@ def get_instruction_tuning_dataloader(
         args.instruction_dataset_size = len(instruction_dataset)
         print_rank_0(f"Instruction dataset size: {args.instruction_dataset_size}")
 
-    train_sampler = CustomDistributedSampler(
+    train_sampler = DistributedSampler(
         dataset=instruction_dataset,
         rank=torch_distributed.get_rank(),
         num_replicas=torch_distributed.get_world_size(),
         shuffle=True,
         seed=args.seed,
     )
-
-    if args.load:
-        load_sampler_state_dict(sampler=train_sampler, path=args.load)
 
     set_sampler(sampler=train_sampler)
 
