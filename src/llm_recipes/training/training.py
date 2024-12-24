@@ -35,6 +35,26 @@ def parse_skip_batch(args: list[int]) -> list[tuple[int, int]]:
     return [(int(args[i]), int(args[i + 1])) for i in range(0, len(args), 2)]
 
 
+def get_batch_samples(iter, num_batches: int, local_rank: int):
+    batch_samples = []
+    for _ in range(num_batches):
+        try:
+            batch_samples += [next(iter)]
+        except StopIteration:
+            raise ValueError("The number of batches to skip exceeds the number of batches in the dataset.")
+    num_tokens_in_global_batch: torch.Tensor = sum(  # type: ignore
+        [batch["labels"].ne(IGNORE_INDEX).sum() for batch in batch_samples]
+    )
+    num_tokens_in_global_batch = num_tokens_in_global_batch.clone().detach().to(local_rank)
+    torch_distributed.all_reduce(
+        num_tokens_in_global_batch, op=torch_distributed.ReduceOp.SUM
+    )  # sum across all ranks (FSDP)
+
+    # print full tensor for debugging
+    torch.set_printoptions(threshold=100000)
+    print(f"DEBUG: global rank {torch_distributed.get_rank()} num_tokens_in_global_batch: {num_tokens_in_global_batch}, batch samples: {batch_samples[0]}, batch_samples: " + batch_samples[0]["labels"][100], flush=True)
+    return batch_samples, num_tokens_in_global_batch.item()
+
 IGNORE_INDEX = -100
 
 
@@ -83,6 +103,7 @@ def train(
     real_seq_len: int = args.seq_length
 
     # cyclic iter
+    train_iter = iter(cyclic_iter(train_dataloader))
     eval_dataloader = iter(cyclic_iter(eval_dataloader))
 
     # skip batch
@@ -90,7 +111,7 @@ def train(
         assert args.continual_pretraining is False
         print_rank_0(f"Skipping {iteration} iterations")
         for _ in range(iteration * gradient_accumulation_steps):
-            next(train_dataloader)
+            next(train_iter)
 
     # profile
     torch_profile_on = args.torch_profile and (
@@ -122,9 +143,6 @@ def train(
 
     while iteration < args.train_iters:
         iteration_start_time = time.perf_counter()
-        if iteration % (args.instruction_dataset_size // args.global_batch_size) == 0:
-            train_dataloader.sampler.set_epoch((iteration // (args.instruction_dataset_size // args.global_batch_size)))
-            train_iter = iter(train_dataloader)
 
         model.train()
         total_loss: float = 0.0
@@ -180,11 +198,6 @@ def train(
                 # continual-pre-training & Instruction Tuning
                 for key in batch.keys():
                     batch[key] = batch[key].to(local_rank)
-                if args.instruction_tuning:
-                    # for gradient accumulation
-                    # related PR: https://github.com/huggingface/transformers/pull/34191
-                    num_tokens_in_batch = (batch["labels"] != IGNORE_INDEX).sum().item()
-                    batch["num_items_in_batch"] = torch.tensor(num_tokens_in_batch).to(local_rank)
 
                 from torch.amp import autocast  # type: ignore
                 with autocast(
@@ -195,6 +208,9 @@ def train(
                     loss: torch.Tensor = model(**batch).loss
 
             loss = loss / gradient_accumulation_steps
+            # loss = loss / gradient_accumulation_steps
+            # continual pre-training & Instruction Tuning is same logic
+            # もし実装が正しいなら continual pre-training の loss が num_tokens_in_batch の前と後で一致するはず
 
             if args.fp16:
                 # if fp16 is enabled, use gradient scaler to handle gradient update

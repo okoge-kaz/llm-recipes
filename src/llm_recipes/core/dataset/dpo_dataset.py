@@ -156,6 +156,7 @@ def get_dpo_dataloader(
     train: bool = False,
 ) -> DataLoader:
     from torch.utils.data.distributed import DistributedSampler
+    from llm_recipes.core.dataset.sequence_length_warmup import CustomDistributedSampler
 
     args = get_args()
 
@@ -168,7 +169,7 @@ def get_dpo_dataloader(
         args.dpo_dataset_size = len(dpo_dataset)
         print_rank_0(f"DPO dataset size: {args.dpo_dataset_size}")
 
-    train_sampler = DistributedSampler(
+    train_sampler = CustomDistributedSampler(
         dataset=dpo_dataset,
         rank=torch_distributed.get_rank(),
         num_replicas=torch_distributed.get_world_size(),
