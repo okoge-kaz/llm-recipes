@@ -6,8 +6,6 @@ set -e
 BASE_OUTPUT_DIR="/gs/bs/tga-NII-LLM/datasets/raw/instruct/training"
 OUTPUT_DIR="${BASE_OUTPUT_DIR}/v0.3"
 
-echo > $OUTPUT_DIR/train.jsonl
-
 MAGPIE_ULTRA_FILE=$OUTPUT_DIR/filtered-magpie-ultra-v0.1.jsonl
 echo "magpie-ultra file: $MAGPIE_ULTRA_FILE"
 wc -l $MAGPIE_ULTRA_FILE
