@@ -1,7 +1,7 @@
 #!/bin/sh
 #$ -cwd
-#$ -l node_f=2
-#$ -l h_rt=0:01:00:00
+#$ -l node_f=8
+#$ -l h_rt=0:24:00:00
 #$ -o outputs/Llama-3.1-8b-instruct/$JOB_ID.log
 #$ -e outputs/Llama-3.1-8b-instruct/$JOB_ID.log
 #$ -p -3
@@ -9,9 +9,9 @@
 # module load
 module use /gs/fs/tga-NII-LLM/modules/modulefiles
 
-module load ylab/cuda/12.1
-module load ylab/cudnn/8.9.7
-module load ylab/nccl/cuda-12.2/2.20.5
+module load ylab/cuda/12.4
+module load ylab/cudnn/9.1.0
+module load ylab/nccl/cuda-12.4/2.21.5
 module load ylab/hpcx/2.17.1
 module load ninja/1.11.1
 
