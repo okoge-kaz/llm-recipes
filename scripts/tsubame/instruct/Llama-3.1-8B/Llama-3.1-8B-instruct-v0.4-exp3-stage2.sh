@@ -1,7 +1,7 @@
 #!/bin/sh
 #$ -cwd
 #$ -l node_f=8
-#$ -l h_rt=0:35:50:00
+#$ -l h_rt=0:24:00:00
 #$ -o outputs/Llama-3.1-8b-instruct/$JOB_ID.log
 #$ -e outputs/Llama-3.1-8b-instruct/$JOB_ID.log
 #$ -p -3
@@ -53,7 +53,7 @@ GRAD_CLIP=1
 
 # checkpoint
 TOKENIZER_DIR=/gs/bs/tga-NII-LLM/hf-checkpoints/Meta-Llama-3-8B-Instruct-pad-token
-CHECKPOINT_DIR=/gs/bs/tga-NII-LLM/checkpoints/fsdp-to-hf/Llama-3.1-8B-Instruct-v0.4/exp3-stage1/LR_${LR}_MINLR_${MIN_LR}_WD_${WEIGHT_DECAY}_GC_${GRAD_CLIP}/iter_0003906
+CHECKPOINT_DIR=/gs/bs/tga-NII-LLM/checkpoints/fsdp-to-hf/Llama-3.1-8B-Instruct-v0.4/exp3-stage1/iter_0007812
 CHECKPOINT_SAVE_DIR="/gs/bs/tga-NII-LLM/checkpoints/Llama-3.1-8B-Instruct-v0.4/exp3-stage2/LR_${LR}_MINLR_${MIN_LR}_WD_${WEIGHT_DECAY}_GC_${GRAD_CLIP}"
 
 mkdir -p ${CHECKPOINT_SAVE_DIR}
