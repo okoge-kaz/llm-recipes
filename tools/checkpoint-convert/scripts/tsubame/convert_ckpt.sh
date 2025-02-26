@@ -1,7 +1,7 @@
 #!/bin/sh
 #$ -cwd
 #$ -l node_f=1
-#$ -l h_rt=0:03:00:00
+#$ -l h_rt=0:01:00:00
 #$ -o outputs/convert/$JOB_ID.log
 #$ -e outputs/convert/$JOB_ID.log
 #$ -p -3
@@ -17,16 +17,16 @@ module load ninja/1.11.1
 
 source .env/bin/activate
 
-start=7812
-end=7812
+start=5224
+end=5224
 increment=5000
 
 for ((i = start; i <= end; i += increment)); do
   ITERATION=$i
   FORMATTED_ITERATION=$(printf "iter_%07d" $ITERATION)
 
-  CHECK_POINT_PATH=/gs/bs/tga-NII-LLM/checkpoints/Llama-3.1-8B-Instruct-v0.4/exp3-stage1/LR_2.5e-5_MINLR_2.5e-6_WD_0.1_GC_1/${FORMATTED_ITERATION}/model.pt
-  OUTPUT_PATH=/gs/bs/tga-NII-LLM/checkpoints/fsdp-to-hf/Llama-3.1-8B-Instruct-v0.4/exp3-stage1/${FORMATTED_ITERATION}
+  CHECK_POINT_PATH=/gs/bs/tga-NII-LLM/checkpoints/Llama-3.1-8B-Instruct-v0.4/exp1/LR_2.5e-5_MINLR_2.5e-6_WD_0.1_GC_1/${FORMATTED_ITERATION}/model.pt
+  OUTPUT_PATH=/gs/bs/tga-NII-LLM/checkpoints/fsdp-to-hf/Llama-3.1-8B-Instruct-v0.4/exp1/${FORMATTED_ITERATION}
 
   echo "convert ${CHECK_POINT_PATH} to ${OUTPUT_PATH}"
 
