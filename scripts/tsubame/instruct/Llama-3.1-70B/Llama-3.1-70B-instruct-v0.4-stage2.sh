@@ -1,7 +1,7 @@
 #!/bin/sh
 #$ -cwd
 #$ -l node_f=16
-#$ -l h_rt=1:10:30:00
+#$ -l h_rt=0:8:00:00
 #$ -o outputs/Llama-3.1-70b-instruct/$JOB_ID.log
 #$ -e outputs/Llama-3.1-70b-instruct/$JOB_ID.log
 #$ -p -3

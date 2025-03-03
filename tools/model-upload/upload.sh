@@ -2,11 +2,11 @@
 
 set -e
 
-start=5224
-end=5224
+start=2500
+end=2500
 increment=5000
 
-upload_base_dir=/gs/bs/tga-NII-LLM/checkpoints/fsdp-to-hf/Llama-3.1-8B-Instruct-v0.4/exp1
+upload_base_dir=/gs/bs/tga-NII-LLM/checkpoints/fsdp-to-hf/Llama-3.3-70B-Instruct-v0.1-stage2
 
 upload_checkpoint() {
   local upload_dir=$1
@@ -33,7 +33,7 @@ upload_checkpoint() {
 
 for ((i = start; i <= end; i += increment)); do
   upload_dir=$upload_base_dir/iter_$(printf "%07d" $i)
-  repo_name="tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.4-exp1-iter_$(printf "%07d" $i)"
+  repo_name="tokyotech-llm/Llama-3.3-Swallow-7B-Instruct-v0.1-stage2-iter_$(printf "%07d" $i)"
 
   if ! upload_checkpoint "$upload_dir" "$repo_name"; then
     echo "Skipping to next checkpoint after repeated failures for $repo_name"

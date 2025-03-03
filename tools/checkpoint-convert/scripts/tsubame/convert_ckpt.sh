@@ -1,7 +1,7 @@
 #!/bin/sh
 #$ -cwd
 #$ -l node_f=1
-#$ -l h_rt=0:01:00:00
+#$ -l h_rt=0:06:00:00
 #$ -o outputs/convert/$JOB_ID.log
 #$ -e outputs/convert/$JOB_ID.log
 #$ -p -3
@@ -17,22 +17,22 @@ module load ninja/1.11.1
 
 source .env/bin/activate
 
-start=5224
-end=5224
+start=2500
+end=2500
 increment=5000
 
 for ((i = start; i <= end; i += increment)); do
   ITERATION=$i
   FORMATTED_ITERATION=$(printf "iter_%07d" $ITERATION)
 
-  CHECK_POINT_PATH=/gs/bs/tga-NII-LLM/checkpoints/Llama-3.1-8B-Instruct-v0.4/exp1/LR_2.5e-5_MINLR_2.5e-6_WD_0.1_GC_1/${FORMATTED_ITERATION}/model.pt
-  OUTPUT_PATH=/gs/bs/tga-NII-LLM/checkpoints/fsdp-to-hf/Llama-3.1-8B-Instruct-v0.4/exp1/${FORMATTED_ITERATION}
+  CHECK_POINT_PATH=/gs/bs/tga-NII-LLM/checkpoints/Llama-3.3-70B-Instruct-v0.1/stage2/LR_1.75e-5_MINLR_1.75e-6_WD_0.1_GC_1/${FORMATTED_ITERATION}/model.pt
+  OUTPUT_PATH=/gs/bs/tga-NII-LLM/checkpoints/fsdp-to-hf/Llama-3.3-70B-Instruct-v0.1-stage2/${FORMATTED_ITERATION}
 
   echo "convert ${CHECK_POINT_PATH} to ${OUTPUT_PATH}"
 
   mkdir -p $OUTPUT_PATH
 
-  BASE_MODEL_CHECKPOINT=/gs/bs/tga-NII-LLM/hf-checkpoints/Meta-Llama-3-8B-Instruct-pad-token
+  BASE_MODEL_CHECKPOINT=/gs/bs/tga-NII-LLM/hf-checkpoints/Meta-Llama-3-70B-Instruct
 
   python tools/checkpoint-convert/convert_ckpt.py \
     --hf-base-model-checkpoint-path $BASE_MODEL_CHECKPOINT \
